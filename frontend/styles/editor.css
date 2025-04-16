@@ -1,0 +1,195 @@
+/* Editor-specific styles */
+
+/* Import core styles */
+@import url('./main.css');
+@import url('./components/cytoscape.css');
+
+/* Cytoscape container for editor */
+#cy.cytoscape-container {
+  width: 1000px;
+  height: 650px;
+  margin: 10px auto;
+  margin-bottom: 10px;
+  border: 2px solid var(--color-primary-dark);
+  border-radius: 8px;
+  box-shadow: 0 4px 7px rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 2;
+  background-color: #333;
+  background-image: url("../Images/Accueil/map.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Editor buttons layout */
+.editor-buttons {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0;
+  flex-wrap: wrap;
+}
+
+/* Dynamic buttons */
+.dynamic-button {
+  margin: 5px;
+  padding: 8px 12px;
+  background-color: #4a5c94;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: monospace;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.dynamic-button:hover {
+  background-color: var(--color-primary);
+  transform: scale(1.05);
+}
+
+.dynamic-button.active {
+  background-color: var(--color-primary-dark);
+  border-left: 3px solid var(--color-accent);
+}
+
+/* Antenna consumption toggle */
+.antenna-toggle-container {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 5px;
+  padding: 8px 12px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
+
+.antenna-toggle-label {
+  margin-right: 5px;
+  font-weight: bold;
+  color: var(--color-text-dark);
+}
+
+/* Base consumption controls */
+.base-consumption-label {
+  margin-left: 15px;
+  margin-right: 5px;
+  font-weight: bold;
+  color: var(--color-text-dark);
+}
+
+.base-consumption-input {
+  width: 60px;
+  padding: 3px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+
+/* Graph list styling */
+.graph-list-container {
+  width: 90%;
+  max-width: 800px;
+  margin: 20px auto;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.graph-list-container h3 {
+  padding: 10px 15px;
+  margin: 0;
+  background-color: var(--color-primary);
+  color: white;
+  font-size: 18px;
+}
+
+#graphList {
+  list-style-type: none;
+  padding: 15px;
+  margin: 0;
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+#graphList li {
+  padding: 8px 12px;
+  margin-bottom: 5px;
+  background-color: #eaeaea;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: monospace;
+  transition: background-color 0.2s;
+  color: var(--color-text-dark);
+}
+
+#graphList li:hover {
+  background-color: #dcdcdc;
+}
+
+#graphListLoading {
+  text-align: center;
+  padding: 15px;
+  color: #666;
+}
+
+/* Special capacity button for edges */
+.capacity-all-button {
+  background-color: #e65100 !important;
+  color: white !important;
+  font-weight: 500;
+  margin-left: 15px !important;
+  border: none;
+  padding: 8px 12px !important;
+}
+  
+.capacity-all-button:hover {
+  background-color: #f57c00 !important;
+  transform: scale(1.05);
+}
+
+/* Auto capacity button */
+.auto-capacity-btn {
+  margin-top: 8px;
+  background-color: #4a5c94;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s;
+}
+
+.auto-capacity-btn:hover {
+  background-color: var(--color-primary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  #cy.cytoscape-container {
+    width: 95%;
+    height: 600px;
+  }
+}
+
+@media (max-width: 768px) {
+  #cy.cytoscape-container {
+    height: 500px;
+  }
+  
+  .antenna-toggle-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .base-consumption-label {
+    margin-top: 8px;
+    margin-left: 0;
+  }
+  
+  .properties-panel {
+    width: 220px;
+  }
+}

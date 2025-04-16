@@ -1,0 +1,74 @@
+/* Core variables for consistent theming across the application */
+
+:root {
+    /* Color Palette */
+    --color-primary: #3a4b83;
+    --color-primary-dark: #2c3c74;
+    --color-secondary: #43a047;
+    --color-secondary-dark: #2e7d32;
+    --color-accent: #FFC107;
+    --color-danger: #F44336;
+    --color-warning: #FF9800;
+    --color-success: #4CAF50;
+    --color-info: #2196F3;
+    
+    /* Background Colors */
+    --color-bg-dark: #1a182d;
+    --color-bg-panel: rgba(28, 36, 54, 0.9);
+    --color-bg-card: rgba(255, 255, 255, 0.12);
+    
+    /* Text Colors */
+    --color-text-light: #ffffff;
+    --color-text-muted: #cccccc;
+    --color-text-dark: #333333;
+    
+    /* Node Colors */
+    --color-router: #8EB8FF;
+    --color-antenna: #96D6A4;
+    --color-antenna-halo: #FFE082;
+    --color-user: #FFA996;
+    
+    /* Spacing */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    
+    /* Fonts */
+    --font-family: 'Poppins', sans-serif;
+    --font-size-xs: 10px;
+    --font-size-sm: 12px;
+    --font-size-md: 14px;
+    --font-size-lg: 16px;
+    --font-size-xl: 18px;
+    --font-size-xxl: 22px;
+    
+    /* Borders */
+    --border-radius-sm: 4px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    
+    /* Shadows */
+    --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.15);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.3);
+    
+    /* Transitions */
+    --transition-fast: 0.2s ease;
+    --transition-medium: 0.3s ease;
+    --transition-slow: 0.5s ease;
+    
+    /* Z-index layers */
+    --z-index-base: 1;
+    --z-index-above: 10;
+    --z-index-popup: 100;
+    --z-index-modal: 1000;
+    
+    /* Breakpoints */
+    --breakpoint-xs: 480px;
+    --breakpoint-sm: 768px;
+    --breakpoint-md: 1000px;
+    --breakpoint-lg: 1200px;
+    --breakpoint-xl: 1400px;
+  }

@@ -1,0 +1,42 @@
+/* Cytoscape container and element styles */
+
+/* Main cytoscape container */
+.cytoscape-container {
+    width: 100%;
+
+    margin: 10px auto;
+    border: 2px solid var(--color-primary);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-md);
+    position: relative;
+    z-index: var(--z-index-base);
+    background-color: #333;
+    background-image: url("../../Images/Accueil/map.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  
+  /* Editor-specific container size */
+  #cy.cytoscape-container {
+    width: 100%;
+    height: 650px;
+    margin: 10px auto;
+    margin-bottom: 10px;
+    border: 2px solid var(--color-primary-dark);
+  }
+  
+  /* Game-specific container for RV and SC */
+  .main-game-area .cytoscape-container {
+    position: relative;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 120px; /* Reserve space for stats */
+    border-radius: 10px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    background-color: rgba(24, 33, 47, 0.6);
+    border: 2px solid rgba(58, 75, 131, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }

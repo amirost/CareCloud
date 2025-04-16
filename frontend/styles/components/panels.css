@@ -1,0 +1,208 @@
+/* --- START OF FILE panels.css --- */
+
+/* Panel styles for sidebars, properties panels, and other containers */
+
+/* Sidebar panel styling (content INSIDE left/right panels) */
+.sidebar-panel {
+  height: 100%;
+  background-color: var(--color-bg-panel);
+  border-radius: var(--border-radius-md);
+  padding: var(--space-md);
+  box-sizing: border-box;
+  overflow-y: auto; /* Allow internal scrolling */
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex; /* Allow content to flex if needed */
+  flex-direction: column; /* Stack content vertically */
+}
+
+.sidebar-title {
+  color: var(--color-text-light);
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  flex-shrink: 0; /* Prevent title from shrinking */
+}
+
+/* REMOVED POSITIONING RULES for .rightpanel and .leftpanel */
+/* Their position is handled by the parent .gameplay grid in common.css */
+
+
+/* Properties panel (This one is okay to be fixed/absolute as it's an overlay) */
+.properties-panel {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 250px;
+  background-color: white;
+  border: 2px solid var(--color-primary);
+  border-radius: var(--border-radius-md);
+  padding: var(--space-md);
+  box-shadow: var(--shadow-md);
+  z-index: var(--z-index-popup);
+  display: none; /* Initially hidden */
+  color: var(--color-text-dark);
+  max-height: calc(100vh - 40px); /* Prevent overflow */
+  overflow-y: auto; /* Allow scrolling if content exceeds height */
+  box-sizing: border-box;
+}
+
+.properties-panel h3 {
+  margin-top: 0;
+  margin-bottom: var(--space-md);
+  color: var(--color-primary);
+  font-size: var(--font-size-lg);
+  border-bottom: 1px solid #eee;
+  padding-bottom: var(--space-xs);
+}
+
+.properties-panel label {
+  display: block;
+  margin-top: var(--space-sm);
+  font-weight: bold;
+  color: var(--color-text-dark); /* Ensure label color */
+}
+
+.properties-panel input[type="number"],
+.properties-panel input[type="text"] {
+  width: 100%;
+  padding: var(--space-xs);
+  margin-bottom: var(--space-sm);
+  border: 1px solid #ccc;
+  border-radius: var(--border-radius-sm);
+  box-sizing: border-box;
+}
+
+.properties-panel input[type="range"] {
+  width: 100%;
+  margin: var(--space-xs) 0 var(--space-md) 0;
+}
+
+.properties-panel input[type="checkbox"] {
+  margin-left: 10px;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  vertical-align: middle; /* Align checkbox better */
+}
+
+.properties-panel .consumption-display {
+  margin: var(--space-sm) 0;
+  padding: var(--space-xs);
+  background-color: #f0f0f0;
+  border-radius: var(--border-radius-sm);
+  text-align: center;
+  color: var(--color-text-dark); /* Ensure text color */
+}
+
+.properties-panel .thickness-value,
+.properties-panel .radius-value {
+  margin-left: 10px;
+  font-weight: bold;
+  color: var(--color-primary);
+}
+
+.properties-panel button {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  margin-top: 15px;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: inherit; /* Inherit font size */
+}
+
+.properties-panel button:hover {
+  background-color: var(--color-primary-dark);
+}
+
+/* Antenna consumption toggle in the editor */
+.antenna-toggle-container {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 5px 0; /* Adjust margin */
+  padding: 8px 12px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
+
+.antenna-toggle-label {
+  margin-right: 5px;
+  font-weight: bold;
+  color: var(--color-text-dark); /* Ensure label color */
+}
+
+/* Checkbox container */
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.checkbox-container label {
+  margin-top: 0;
+  margin-right: 10px;
+  display: inline; /* Keep label inline */
+  font-weight: normal; /* Adjust weight if needed */
+}
+
+.checkbox-container input[type="checkbox"] {
+  margin-left: 0;
+  margin-right: 5px; /* Add space after checkbox */
+}
+
+input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Graph list container */
+.graph-list-container {
+  width: 90%;
+  max-width: 800px;
+  margin: 20px auto;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.graph-list-container h3 {
+  padding: 10px 15px;
+  margin: 0;
+  background-color: var(--color-primary);
+  color: white;
+  font-size: 18px;
+}
+
+/* Scrollbar styling for panels */
+.sidebar-panel::-webkit-scrollbar,
+.properties-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-panel::-webkit-scrollbar-track,
+.properties-panel::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.sidebar-panel::-webkit-scrollbar-thumb,
+.properties-panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.sidebar-panel::-webkit-scrollbar-thumb:hover,
+.properties-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}

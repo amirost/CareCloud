@@ -1,0 +1,197 @@
+/* SC (Set Cover) specific game styles */
+
+/* User items container */
+.user-items-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    max-height: calc(100% - 40px);
+    padding: 2px;
+  }
+  
+  .user-item {
+    display: flex;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 12px 15px;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+  }
+  
+  .user-item:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Styling for different user states */
+  .user-item.connected {
+    border-left-color: var(--color-success);
+  }
+  
+  .user-item.selected {
+    border-left-color: var(--color-accent);
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+  
+  .color-indicator {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    margin-right: 12px;
+    flex-shrink: 0;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+  }
+  
+  .user-info {
+    flex-grow: 1;
+    font-size: 14px;
+    color: white;
+  }
+  
+  .user-status {
+    font-size: 12px;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+  }
+  
+  /* Add status indicators with dot */
+  .user-status::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+  
+  .user-status.connected {
+    color: var(--color-success);
+  }
+  
+  .user-status.connected::before {
+    background-color: var(--color-success);
+    box-shadow: 0 0 5px var(--color-success);
+  }
+  
+  .user-status.disconnected {
+    color: var(--color-accent);
+  }
+  
+  .user-status.disconnected::before {
+    background-color: var(--color-accent);
+  }
+  
+  .user-status.selected {
+    color: var(--color-warning);
+    animation: pulse 1.5s infinite;
+  }
+  
+  .user-status.selected::before {
+    background-color: var(--color-warning);
+    animation: pulse-dot 1.5s infinite;
+  }
+  
+  /* Antenna items container */
+  .antenna-items-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .antenna-title {
+    color: white;
+    font-size: 16px;
+    margin-bottom: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  
+  .antenna-item {
+    display: flex;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 10px 15px;
+    transition: all 0.2s ease;
+  }
+  
+  .antenna-item:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+  
+  .antenna-item.active {
+    border-left: 3px solid var(--color-success);
+  }
+  
+  .antenna-item.inactive {
+    border-left: 3px solid var(--color-danger);
+    opacity: 0.7;
+  }
+  
+  .antenna-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: white;
+  }
+  
+  .antenna-info {
+    flex-grow: 1;
+  }
+  
+  .antenna-id {
+    font-size: 14px;
+    color: white;
+  }
+  
+  .antenna-coverage {
+    font-size: 11px;
+    color: #ccc;
+    margin-top: 2px;
+  }
+  
+  /* SC-specific color variables for users */
+  .user-color-0 {
+    background-color: #FF6B6B;
+  }
+  
+  .user-color-1 {
+    background-color: #4ECDC4;
+  }
+  
+  .user-color-2 {
+    background-color: #FFD166;
+  }
+  
+  .user-color-3 {
+    background-color: #118AB2;
+  }
+  
+  .user-color-4 {
+    background-color: #5E60CE;
+  }
+  
+  .user-color-5 {
+    background-color: #E76F51;
+  }
+  
+  .user-color-6 {
+    background-color: #2A9D8F;
+  }
+  
+  .user-color-7 {
+    background-color: #F4A261;
+  }

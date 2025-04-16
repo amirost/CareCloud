@@ -1,0 +1,150 @@
+/* Navigation styles for navbars and menu items */
+
+/* Navigation bar */
+.navigation-bar {
+    display: flex;
+    max-width: 100%; /* Ensure it doesn't exceed parent width */
+    box-sizing: border-box; /* Include padding in width */
+    gap: var(--space-md);
+    padding: var(--space-md);
+    background-color: var(--color-bg-panel);
+    border-radius: 10px;
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  
+  .navigation-bar button {
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+  
+  .navigation-bar button:hover {
+    background-color: var(--color-primary-dark);
+    transform: translateY(-2px);
+  }
+  
+  #resetBtn {
+    background-color: var(--color-danger);
+  }
+  
+  #resetBtn:hover {
+    background-color: #c62828;
+  }
+  
+  /* Top navigation */
+  .top-navigation {
+    padding: var(--space-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  /* Game selection navigation */
+  .level-selection {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    height: 100%;
+    overflow: auto;
+  }
+  
+  .level-selection header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+  }
+  
+  .level-selection h1 {
+    color: white;
+    margin: 0;
+    font-size: 32px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Graph list navigation */
+  #graphList {
+    list-style-type: none;
+    padding: 15px;
+    margin: 0;
+    max-height: 350px;
+    overflow-y: auto;
+  }
+  
+  #graphList li {
+    padding: 8px 12px;
+    margin-bottom: 5px;
+    background-color: #eaeaea;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: monospace;
+    transition: background-color 0.2s;
+  }
+  
+  #graphList li:hover {
+    background-color: #dcdcdc;
+  }
+  
+  #graphListLoading {
+    text-align: center;
+    padding: 15px;
+    color: #666;
+  }
+  
+  /* Modern scrollbar for lists */
+  .graph-list::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .graph-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+  
+  .graph-list::-webkit-scrollbar-thumb {
+    background: #c1d5f0;
+    border-radius: 4px;
+  }
+  
+  .graph-list::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary);
+  }
+  
+  /* Tab navigation */
+  .tabs {
+    display: flex;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    margin-bottom: var(--space-md);
+  }
+  
+  .tab-item {
+    flex: 1;
+    padding: var(--space-sm) var(--space-md);
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    color: var(--color-text-muted);
+    border-bottom: 2px solid transparent;
+  }
+  
+  .tab-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--color-text-light);
+  }
+  
+  .tab-item.active {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--color-text-light);
+    border-bottom-color: var(--color-accent);
+    font-weight: 500;
+  }

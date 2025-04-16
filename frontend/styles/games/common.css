@@ -1,0 +1,335 @@
+/* --- START OF FILE common.css --- */
+
+/* Main gameplay container - NOW THE GRID CONTAINER */
+.gameplay {
+  display: grid !important; /* FORCE GRID */
+  grid-template-columns: minmax(180px, 15%) minmax(0, 1fr) minmax(250px, 20%) !important; /* FORCE COLUMNS */
+  grid-template-rows: 100% !important; /* FORCE SINGLE ROW HEIGHT */
+  gap: var(--space-md);
+  height: 100vh !important; /* FORCE VIEWPORT HEIGHT */
+  min-height: 500px; /* NEW: Add a minimum height for the whole layout */
+  width: 100%;
+  padding: var(--space-md);
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden !important; /* FORCE HIDING OVERFLOW */
+  background-size: cover;
+  background-position: center;
+}
+
+/* Add a subtle overlay to improve contrast */
+.gameplay::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 1;
+}
+
+/* Ensure content appears above the overlay */
+.gameplay > * {
+  position: relative;
+  z-index: 2;
+  overflow: hidden; /* Prevent direct children causing overflow */
+  height: 100%; /* Make direct children fill grid row height */
+  /* Add background colors temporarily to see the boxes */
+  /* background-color: rgba(255, 0, 0, 0.2); Remove later */
+}
+
+/* Game container - NOW A GRID ITEM in the second column */
+.game-container {
+  /* Removed grid properties */
+  display: flex; /* Use flexbox to manage its internal content */
+  flex-direction: column; /* Stack children vertically */
+  height: 100%; /* Fill the height of its grid area */
+  /* Removed padding/gap/width/height as they are controlled by the parent grid */
+  position: relative; /* Needed for absolute positioning of game-stats-container */
+  overflow: hidden; /* Prevent internal content overflow issues */
+  min-height: 0; /* Allow shrinking */
+
+}
+
+/* Left column - navigation and tools (Grid Item 1) */
+.left-panel {
+  /* grid-column: 1;  <-- No longer strictly needed as it's the first child */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  /* max-width: 300px; <-- Let grid control width */
+  height: 100%; /* Fill grid row height */
+  overflow: visible; /* Allow potential dropdowns/tooltips */
+}
+
+/* Center column - main gameplay area (Content WITHIN game-container) */
+.main-game-area {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  height: 100%;
+  min-height: 250px; /* NEW: Ensure it doesn't collapse entirely */
+  overflow: hidden; /* Add overflow hidden here too */
+  position: relative; /* Already set, needed for absolute children */
+  box-sizing: border-box;
+  padding-bottom: 120px; /* Existing space for stats */
+  padding-top: 50px; /* NEW: Add space at the top for the popup */
+}
+
+/* Popup container at the top of center column */
+.popup-container {
+  width: 100%;
+  text-align: center;
+  pointer-events: none;
+  padding: var(--space-sm) 0;
+  z-index: 10;
+  position: relative; /* Position it relative to main-game-area */
+  top: var(--space-sm); /* Space from the top edge of main-game-area */
+  left: 0;
+  right: 0; /* Center it horizontally */
+}
+
+/* Cytoscape container in the middle of center column */
+.cytoscape-container {
+  flex-grow: 1;
+  width: 100%;
+  min-height: 150px; /* NEW: Give the map a minimum height */
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-md);
+  background-color: rgba(24, 33, 47, 0.6);
+  border: 2px solid rgba(58, 75, 131, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  position: relative; /* Keep relative for internal Cytoscape stuff */
+  z-index: 5;
+  /* It will now naturally fill the space between top/bottom padding */
+}
+
+/* Game stats container at the bottom of center column */
+.game-stats-container {
+  /* Now positioned relative to main-game-area */
+  position: relative;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0px; /* Fixed height */
+  background-color: var(--color-bg-panel);
+  border-radius: var(--border-radius-md);
+  padding: var(--space-sm);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 10; /* Ensure it appears above the cytoscape container */
+  box-sizing: border-box;
+}
+
+/* Right column - sidebar panel (Grid Item 3) */
+.rightpanel {
+  /* grid-column: 3; <-- No longer strictly needed */
+  height: 100%; /* Fill grid row height */
+  /* max-width: 350px; <-- Let grid control width */
+  display: flex; /* Use flex to allow sidebar-panel to grow */
+  flex-direction: column;
+  min-height: 0; /* Allow shrinking */
+  overflow: hidden; /* Prevent its content spilling out */
+}
+
+/* Sidebar panel styling (Content WITHIN rightpanel) */
+.sidebar-panel {
+  height: 100%; /* Fill rightpanel height */
+  background-color: var(--color-bg-panel);
+  border-radius: var(--border-radius-md);
+  padding: var(--space-md);
+  box-sizing: border-box;
+  overflow-y: auto; /* Allow internal scrolling */
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex; /* Added */
+  flex-direction: column; /* Added */
+  min-height: 100px; /* NEW: Minimum height for the panel content area */
+
+}
+
+/* Tools panel styling */
+.tools-panel {
+  margin-top: var(--space-md); /* Add space below navigation bar */
+  padding: var(--space-sm);
+  background-color: var(--color-bg-panel); /* Optional: Match nav background */
+  border-radius: 8px; /* Optional: Match nav border-radius */
+  box-shadow: var(--shadow-md); /* Optional: Match nav shadow */
+  backdrop-filter: blur(10px); /* Optional: Match nav blur */
+  -webkit-backdrop-filter: blur(10px); /* Optional: Match nav blur */
+  display: flex; /* Arrange tools */
+  flex-direction: column; /* Stack tools vertically */
+  gap: var(--space-sm);
+}
+
+.tool-button {
+  /* Inherit base button styles */
+  background-color: var(--color-primary); /* Match nav button color */
+  color: white;
+  padding: 8px 12px; /* Slightly smaller padding maybe? */
+  font-size: var(--font-size-sm); /* Smaller font size? */
+  border-radius: 6px;
+  width: 100%; /* Make button full width of panel */
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.tool-button:hover {
+   background-color: var(--color-primary-dark); /* Match nav button hover */
+   transform: translateY(-1px); /* Subtle hover effect */
+}
+
+.tool-button i {
+  margin-right: 6px; /* Space between icon and text */
+}
+
+/* --- RESPONSIVE ADJUSTMENTS --- */
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 1199.98px) { /* Adjusted breakpoint slightly */
+  .gameplay { /* Adjust grid on gameplay */
+    grid-template-columns: minmax(150px, 15%) minmax(0, 1fr) minmax(220px, 25%);
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+  }
+
+  /* Adjustments for elements inside */
+  .main-game-area {
+    padding-bottom: 115px; /* Adjust if stats height changes */
+  }
+  .game-stats-container {
+     height: 105px; /* Adjust if needed */
+  }
+}
+
+/* Tablet layout - stack elements by changing gameplay grid */
+@media (max-width: 991.98px) { /* Use consistent breakpoint */
+  .gameplay { /* Change gameplay grid */
+    display: grid !important; /* Keep forcing grid */
+    grid-template-columns: 1fr !important; /* FORCE Single column */
+    grid-template-rows: auto minmax(0, 1fr) auto !important; /* FORCE Rows */
+    height: auto !important; /* Allow height to grow */
+    min-height: 100vh;
+    gap: var(--space-md);
+    padding: var(--space-sm);
+    overflow-y: auto !important; /* Allow scrolling on the whole page */
+  }
+
+  .gameplay > * {
+     height: auto; /* Let rows determine height */
+     overflow: visible; /* Allow content to determine height */
+  }
+
+  .left-panel {
+    grid-row: 1; /* Assign to first row */
+    max-width: 100%;
+  }
+
+  .game-container {
+    grid-row: 2; /* Assign to second row */
+    min-height: 60vh; /* Ensure minimum height */
+    overflow: visible;
+  }
+
+  .main-game-area {
+     min-height: 50vh; /* Ensure main area has reasonable height */
+     height: auto; /* Allow height based on content/min-height */
+     padding-bottom: 130px; /* Add padding to prevent overlap with stats */
+     /* stats container position remains absolute relative to this */
+  }
+
+  .cytoscape-container {
+     min-height: 400px; /* Adjust min height if needed */
+  }
+
+  .game-stats-container {
+    height: 120px; /* Keep adjusted height */
+    /* Position remains absolute relative to main-game-area */
+    /* If using fixed positioning, that rule should be in responsive.css */
+  }
+
+  .rightpanel {
+    grid-row: 3; /* Assign to third row */
+    max-width: 100%;
+    min-height: 200px; /* Give it some minimum space */
+    max-height: 40vh; /* Limit height */
+  }
+
+  .sidebar-panel {
+     /* Allow internal scrolling within the limited height */
+  }
+
+  /* Navigation bar adjustments */
+  .navigation-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-xs);
+    width: 100%; /* Take full width in stacked layout */
+  }
+
+  .navigation-bar button {
+    flex: 1 1 auto; /* Allow wrapping */
+    min-width: 120px;
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 14px;
+  }
+
+  .tools-panel {
+    flex-direction: row; /* Buttons side-by-side */
+    flex-wrap: wrap; /* Allow wrapping */
+    justify-content: center;
+    margin-top: var(--space-sm);
+    padding: var(--space-xs);
+  }
+  .tool-button {
+     width: auto; /* Auto width */
+     flex: 1 1 100px; /* Allow flexible sizing */
+  }
+
+}
+
+/* Mobile layout - further optimizations */
+@media (max-width: 575.98px) { /* Use consistent breakpoint */
+  .gameplay { /* Adjust gameplay grid */
+    padding: var(--space-xs);
+    gap: var(--space-xs);
+    grid-template-rows: auto minmax(0, 1fr) auto; /* Adjust row heights */
+  }
+
+  .main-game-area {
+     min-height: 55vh; /* Adjust min height */
+     padding-bottom: 140px; /* Adjust padding for stats */
+  }
+
+  .cytoscape-container {
+    min-height: 350px; /* Further reduce min height */
+  }
+
+  .game-stats-container {
+    padding: var(--space-xs);
+    height: 130px; /* Adjust height */
+  }
+
+  .rightpanel {
+     min-height: 150px;
+     max-height: 35vh;
+  }
+
+  /* Navigation bar adjustments */
+  .navigation-bar button {
+    min-width: 100px;
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  /* Popup message adjustments */
+  .popup-message {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+}

@@ -1,0 +1,152 @@
+/* Button styles for all types of buttons used in the application */
+
+/* Base button styles */
+button {
+    font-family: var(--font-family);
+    font-weight: 500;
+    padding: var(--space-sm) var(--space-md);
+    border: none;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  button:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+  
+  /* Primary button */
+  .primary-button {
+    background-color: var(--color-primary);
+    color: var(--color-text-light);
+  }
+  
+  .primary-button:hover {
+    background-color: var(--color-primary-dark);
+  }
+  
+  /* Secondary button */
+  .secondary-button {
+    background-color: var(--color-bg-panel);
+    color: var(--color-text-light);
+  }
+  
+  .secondary-button:hover {
+    background-color: rgba(58, 75, 131, 0.8);
+  }
+  
+  /* Action button */
+  .action-button {
+    background-color: var(--color-secondary);
+    color: var(--color-text-light);
+  }
+  
+  .action-button:hover {
+    background-color: var(--color-secondary-dark);
+  }
+  
+  /* Reset button */
+  .reset-button {
+    background-color: var(--color-danger);
+    color: var(--color-text-light);
+  }
+  
+  .reset-button:hover {
+    background-color: #c62828;
+  }
+  
+  /* Game button */
+  .game-button {
+    background-color: var(--color-secondary);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    font-family: monospace;
+    transition: background-color var(--transition-fast);
+  }
+  
+  .game-button:hover {
+    background-color: var(--color-secondary-dark);
+  }
+  
+  /* Dynamic buttons for editor */
+  .dynamic-button {
+    margin: var(--space-xs);
+    background-color: #4a5c94;
+    color: var(--color-text-light);
+    transition: background-color var(--transition-fast), transform var(--transition-fast);
+  }
+  
+  .dynamic-button:hover {
+    background-color: var(--color-primary);
+    transform: scale(1.05);
+  }
+  
+  .dynamic-button.active {
+    background-color: var(--color-primary-dark);
+    border-left: 3px solid var(--color-accent);
+  }
+  
+  /* User/pair reset button */
+  .pair-reset-btn,
+  .user-reset-btn {
+    background-color: #e57373;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: all var(--transition-fast);
+  }
+  
+  .pair-reset-btn:hover:not(:disabled),
+  .user-reset-btn:hover:not(:disabled) {
+    background-color: var(--color-danger);
+    transform: scale(1.05);
+  }
+  
+  .pair-reset-btn:active:not(:disabled),
+  .user-reset-btn:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  
+  .pair-reset-btn:disabled,
+  .user-reset-btn:disabled {
+    background-color: #78909c;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  
+  /* Special capacity button for edges */
+  .capacity-all-button {
+    background-color: #e65100 !important;
+    color: white !important;
+    font-weight: 500;
+    margin-left: 15px !important;
+    border: none;
+    padding: 8px 12px !important;
+  }
+    
+  .capacity-all-button:hover {
+    background-color: #f57c00 !important;
+    transform: scale(1.05);
+  }

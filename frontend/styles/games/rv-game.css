@@ -1,0 +1,139 @@
+/* RV (Réseaux Verts) specific game styles */
+
+/* User pairs container styling */
+.user-pairs-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    max-height: calc(100% - 40px);
+    padding: 2px;
+  }
+  
+  .user-pair-item {
+    display: flex;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 12px 15px;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+  }
+  
+  .user-pair-item:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Styling for different pair states */
+  .user-pair-item .pair-status.connected ~ .pair-reset-btn:not(:disabled) {
+    border-left-color: var(--color-success);
+  }
+  
+  .user-pair-item .pair-status.in-progress ~ .pair-reset-btn:not(:disabled) {
+    border-left-color: var(--color-warning);
+  }
+  
+  .pair-color-indicator {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    margin-right: 12px;
+    flex-shrink: 0;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+  }
+  
+  .pair-info {
+    flex-grow: 1;
+    font-size: 14px;
+    color: white;
+  }
+  
+  .pair-status {
+    font-size: 12px;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+  }
+  
+  /* Add status indicators with dot */
+  .pair-status::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+  
+  .pair-status.connected {
+    color: var(--color-success);
+  }
+  
+  .pair-status.connected::before {
+    background-color: var(--color-success);
+    box-shadow: 0 0 5px var(--color-success);
+  }
+  
+  .pair-status.disconnected {
+    color: var(--color-accent);
+  }
+  
+  .pair-status.disconnected::before {
+    background-color: var(--color-accent);
+  }
+  
+  .pair-status.in-progress {
+    color: var(--color-warning);
+    animation: pulse 1.5s infinite;
+  }
+  
+  .pair-status.in-progress::before {
+    background-color: var(--color-warning);
+    animation: pulse-dot 1.5s infinite;
+  }
+  
+  @keyframes pulse-dot {
+    0% { opacity: 0.7; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+    100% { opacity: 0.7; transform: scale(1); }
+  }
+  
+
+  
+  /* RV-specific node colors */
+  .user-pair-color-0 {
+    background-color: #FF6B6B;
+  }
+  
+  .user-pair-color-1 {
+    background-color: #4ECDC4;
+  }
+  
+  .user-pair-color-2 {
+    background-color: #FFD166;
+  }
+  
+  .user-pair-color-3 {
+    background-color: #118AB2;
+  }
+  
+  .user-pair-color-4 {
+    background-color: #5E60CE;
+  }
+  
+  .user-pair-color-5 {
+    background-color: #E76F51;
+  }
+  
+  .user-pair-color-6 {
+    background-color: #2A9D8F;
+  }
+  
+  .user-pair-color-7 {
+    background-color: #F4A261;
+  }
+  

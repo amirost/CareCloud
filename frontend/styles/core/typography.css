@@ -1,0 +1,105 @@
+/* Typography styles for consistent text rendering */
+
+body {
+    font-family: var(--font-family);
+    font-weight: 400;
+    color: var(--color-text-light);
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: var(--space-md);
+  }
+  
+  h1 {
+    font-size: 32px;
+  }
+  
+  h2 {
+    font-size: 28px;
+  }
+  
+  h3 {
+    font-size: 22px;
+  }
+  
+  h4 {
+    font-size: 18px;
+  }
+  
+  h5 {
+    font-size: 16px;
+  }
+  
+  h6 {
+    font-size: 14px;
+  }
+  
+  p {
+    margin-bottom: var(--space-md);
+  }
+  
+  .text-xs {
+    font-size: var(--font-size-xs);
+  }
+  
+  .text-sm {
+    font-size: var(--font-size-sm);
+  }
+  
+  .text-md {
+    font-size: var(--font-size-md);
+  }
+  
+  .text-lg {
+    font-size: var(--font-size-lg);
+  }
+  
+  .text-xl {
+    font-size: var(--font-size-xl);
+  }
+  
+  .text-xxl {
+    font-size: var(--font-size-xxl);
+  }
+  
+  .text-light {
+    color: var(--color-text-light);
+  }
+  
+  .text-muted {
+    color: var(--color-text-muted);
+  }
+  
+  .text-dark {
+    color: var(--color-text-dark);
+  }
+  
+  .text-center {
+    text-align: center;
+  }
+  
+  .text-left {
+    text-align: left;
+  }
+  
+  .text-right {
+    text-align: right;
+  }
+  
+  .font-bold {
+    font-weight: 700;
+  }
+  
+  .font-semibold {
+    font-weight: 600;
+  }
+  
+  .font-normal {
+    font-weight: 400;
+  }
+  
+  .font-light {
+    font-weight: 300;
+  }

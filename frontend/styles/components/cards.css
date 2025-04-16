@@ -1,0 +1,146 @@
+/* Card styles for various card elements in the application */
+
+/* Base card style */
+.card {
+    background-color: var(--color-bg-panel);
+    border-radius: var(--border-radius-md);
+    padding: var(--space-md);
+    box-shadow: var(--shadow-md);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  }
+  
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  /* Stats card */
+  .stats-card {
+    background-color: var(--color-bg-card);
+    border-radius: var(--border-radius-md);
+    padding: var(--space-sm) var(--space-md);
+    flex: 1;
+    min-width: 180px;
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    transition: all var(--transition-fast);
+    border-left: 3px solid transparent;
+  }
+  
+  .stats-card:hover {
+    background-color: rgba(255, 255, 255, 0.18);
+    transform: translateY(-2px);
+  }
+  
+  /* Style each card differently */
+  .stats-card:nth-child(1) {
+    border-left-color: #90CAF9;
+  }
+  
+  .stats-card:nth-child(2) {
+    border-left-color: #FFD54F;
+  }
+  
+  .stats-icon {
+    font-size: var(--font-size-lg);
+    color: white;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Specific icon colors */
+  .stats-card:nth-child(1) .stats-icon {
+    color: #90CAF9;
+  }
+  
+  .stats-card:nth-child(2) .stats-icon {
+    color: #FFD54F;
+  }
+  
+  .stats-info {
+    flex: 1;
+  }
+  
+  .stats-label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+  }
+  
+  .stats-value {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: white;
+  }
+  
+  /* Mini-game cards for homepage */
+  .mini-game-RV, 
+  .mini-game-2, 
+  .mini-game-3, 
+  .mini-game-4 {
+    background: linear-gradient(to bottom, #2c3c74, #3a4b83);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    width: 250px;
+    height: 350px;
+  }
+  
+  .mini-game-RV:hover, 
+  .mini-game-2:hover, 
+  .mini-game-3:hover, 
+  .mini-game-4:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  }
+  
+  .game-image {
+    width: 100%;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+  
+  /* Graph list item card */
+  .graph-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    border-left: 4px solid var(--color-primary);
+  }
+  
+  .graph-list-item:hover {
+    background-color: #e9f2fd;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  }
+  
+  .graph-info {
+    flex: 1;
+  }
+  
+  .graph-name {
+    font-weight: 600;
+    color: #2c3c74;
+    margin-bottom: 6px;
+    font-size: 16px;
+  }
+  
+  .graph-date {
+    font-size: 14px;
+    color: #666;
+  }

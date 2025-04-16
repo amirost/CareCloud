@@ -1,0 +1,206 @@
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #1a182d;
+    margin: 0;
+    padding: 20px;
+}
+
+.main-container {
+    display: flex;
+    width: 100%;
+    margin: auto;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row; /* Ensure the mini-games are side by side */
+    gap: 40px; /* Adds space between the mini-games */
+    margin-top: 10%;
+}
+
+.mini-game-container {
+    display: flex;
+    flex-direction: row; /* Side by side layout for mini-games */
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.mini-game-RV, .mini-game-2, .mini-game-3, .mini-game-4 {
+    background: linear-gradient(to bottom, #2c3c74, #3a4b83);
+    border-radius: 8px;
+    padding: 20px; /* Increased padding for larger size */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    width: 250px; /* Increased size of mini-games */
+    height: 350px; /* Increased size of mini-games */
+}
+
+.mini-game-RV:hover, 
+.mini-game-2:hover, 
+.mini-game-3:hover, 
+.mini-game-4:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.game-image {
+    width: 100%;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.game-button {
+    background-color: #43a047;
+    color: white;
+    border: none;
+    padding: 10px 20px; /* Increased button size */
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: monospace;
+    transition: background-color 0.2s;
+}
+
+.game-button:hover {
+    background-color: #2e7d32;
+}
+
+.map-display {
+    display: none;
+}
+
+.editor-buttons {
+    display: flex;
+    justify-content: center;
+    margin: 10px 0;
+    flex-wrap: wrap;
+}
+
+
+.cytoscape-container {
+    width: 1000px; 
+    height: 650px; 
+    margin: 10px auto;
+    margin-bottom: 10px;
+    border: 2px solid #2c3c74;
+    border-radius: 8px;
+    box-shadow: 0 4px 7px rgba(0, 0, 0, 0.2);
+    position: relative;
+    z-index: 2;
+    background-color: #333;
+    background-image: url("../Images/Accueil/map.jpg");
+    background-size: cover;     
+    background-position: center; 
+    background-repeat: no-repeat; 
+    /*filter: saturate(100);*/
+
+}
+
+/* Graph List Styles */
+.graph-list-container {
+    width: 90%;
+    max-width: 800px;
+    margin: 20px auto;
+    background-color: #f8f8f8;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.graph-list-container h3 {
+    padding: 10px 15px;
+    margin: 0;
+    background-color: #3a4b83;
+    color: white;
+    font-size: 18px;
+}
+
+#graphList {
+    list-style-type: none;
+    padding: 15px;
+    margin: 0;
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+#graphList li {
+    padding: 8px 12px;
+    margin-bottom: 5px;
+    background-color: #eaeaea;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: monospace;
+    transition: background-color 0.2s;
+}
+
+#graphList li:hover {
+    background-color: #dcdcdc;
+}
+
+#graphListLoading {
+    text-align: center;
+    padding: 15px;
+    color: #666;
+}
+
+/* Buttons */
+button {
+    margin: 5px;
+    padding: 8px 12px;
+    background-color: #4a5c94;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: monospace;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+button:hover {
+    background-color: #3a4b83;
+    transform: scale(1.05);
+}
+
+/* Mode selector styling */
+#modeSelector {
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-family: monospace;
+    margin: 5px;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 1200px) {
+    .main-container {
+        flex-direction: column;
+    }
+
+    .mini-game-container {
+        flex-direction: column;
+    }
+
+    .cytoscape-container {
+        width: 95%;
+        height: 500px;
+    }
+}
+
+@media (max-width: 768px) {
+    .cytoscape-container {
+        width: 95%;
+        height: 500px;
+    }
+}
+
+.capacity-all-button {
+    background-color: #e65100 !important; /* Orange pour se démarquer */
+    color: white !important;
+    font-weight: 500;
+    margin-left: 15px !important;
+    border: none;
+    padding: 8px 12px !important;
+}
+  
+.capacity-all-button:hover {
+    background-color: #f57c00 !important;
+    transform: scale(1.05);
+}

@@ -1,0 +1,299 @@
+/* --- START OF FILE responsive.css --- */
+
+/* Responsive utility classes and media queries */
+
+/* Media query helpers */
+/* Extra small devices (phones, less than 480px) */
+@media (max-width: 479.98px) {
+  .d-xs-none { display: none !important; }
+  .d-xs-block { display: block !important; }
+  .d-xs-flex { display: flex !important; }
+  .flex-xs-column { flex-direction: column !important; }
+  .text-xs-center { text-align: center !important; }
+}
+
+/* Small devices (phones, 480px and up to 768px) */
+@media (min-width: 480px) and (max-width: 767.98px) {
+  .d-sm-none { display: none !important; }
+  .d-sm-block { display: block !important; }
+  .d-sm-flex { display: flex !important; }
+  .flex-sm-column { flex-direction: column !important; }
+  .text-sm-center { text-align: center !important; }
+}
+
+/* Medium devices (tablets, 768px and up to 992px) */
+@media (min-width: 768px) and (max-width: 991.98px) { /* Adjusted upper bound */
+  .d-md-none { display: none !important; }
+  .d-md-block { display: block !important; }
+  .d-md-flex { display: flex !important; }
+  .flex-md-column { flex-direction: column !important; }
+  .text-md-center { text-align: center !important; }
+}
+
+/* Large devices (desktops, 992px and up to 1200px) */
+@media (min-width: 992px) and (max-width: 1199.98px) { /* Adjusted lower bound */
+  .d-lg-none { display: none !important; }
+  .d-lg-block { display: block !important; }
+  .d-lg-flex { display: flex !important; }
+  .flex-lg-column { flex-direction: column !important; }
+  .text-lg-center { text-align: center !important; }
+}
+
+/* Extra large devices (large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+  .d-xl-none { display: none !important; }
+  .d-xl-block { display: block !important; }
+  .d-xl-flex { display: flex !important; }
+  .flex-xl-column { flex-direction: column !important; }
+  .text-xl-center { text-align: center !important; }
+}
+
+/* General responsive layouts */
+
+/* Large screens (above 1400px) - comfortable spacing */
+@media (min-width: 1400px) {
+  /* Adjustments for VERY large screens */
+  /* Example: Finer control over spacing if needed */
+  /* .gameplay { padding: 25px; gap: 25px; } */ /* Let common.css handle base */
+  .stats-card { padding: 15px 20px; }
+  .navigation-bar { padding: 15px; }
+  /* REMOVED explicit width for rightpanel */
+}
+
+/* Medium-Large screens (1200px - 1399.98px) */
+@media (max-width: 1399.98px) and (min-width: 1200px) {
+  /* REMOVED explicit width for rightpanel */
+  /* Minor adjustments if needed */
+}
+
+/* Medium screens (992px - 1199.98px) */
+/* Rules for slightly smaller 3-column layout */
+@media (max-width: 1199.98px) and (min-width: 992px) {
+  /* REMOVED explicit width for rightpanel */
+  .navigation-bar button { /* Okay to adjust button size */
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+  .stats-card { /* Okay to adjust card size */
+    min-width: 150px;
+  }
+  /* Adjust main-game-area padding if stats height changed in common.css */
+  /* .main-game-area { padding-bottom: 115px; } */
+}
+
+
+/* =============================================== */
+/* == STACKED LAYOUT RULES (BELOW 992px) == */
+/* =============================================== */
+@media (max-width: 991.98px) {
+
+/* common.css should already be setting display: grid; grid-template-columns: 1fr; */
+/* grid-template-rows, height: auto, min-height: 100vh etc. */
+/* These rules below only refine the *appearance* within the stacked layout */
+
+/* Remove rules that redefine the core layout if common.css does it */
+/* .gameplay { ... } */
+/* .main-game-area { ...width/height... } */
+/* .rightpanel { ...width/height... } */
+
+/* Keep rules that style components *within* their containers */
+.navigation-bar {
+  /* Already handled in common.css */
+}
+
+.navigation-bar button {
+  /* Already handled in common.css */
+}
+
+/* Adjust user pairs/items to horizontal layout on tablets */
+.user-pairs-container,
+.user-items-container {
+  flex-direction: row; /* Changed from default column */
+  flex-wrap: wrap;
+  gap: 10px;
+  max-height: none; /* Override max-height */
+  overflow-y: visible; /* Needed for wrap */
+}
+
+.user-pair-item,
+.user-item {
+  width: calc(50% - 5px); /* Two columns */
+  min-width: 200px; /* Minimum width before wrapping */
+  flex: 1 1 200px; /* Allow grow/shrink based on min-width */
+}
+
+/* Fixed position for game stats - Apply carefully */
+/* UNCOMMENT this block if you want fixed stats on tablet/mobile */
+/*
+.game-stats-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  box-sizing: border-box;
+  z-index: 100;
+  height: 120px; // Match common.css or adjust
+}
+*/
+
+/* Adjust main-game-area padding ONLY if stats are fixed */
+/* UNCOMMENT and adjust padding if using fixed stats */
+/*
+.main-game-area {
+   padding-bottom: 130px; // Should be slightly more than fixed stats height
+   box-sizing: border-box;
+}
+*/
+
+/* Adjust sidebar panel height */
+.sidebar-panel {
+    /* Max height is controlled by .rightpanel in common.css */
+}
+}
+
+
+/* Small screens (below 768px) */
+@media (max-width: 767.98px) {
+/* Further refine stacked layout for smaller screens */
+/* Height/min-height adjustments are in common.css */
+
+/* Padding adjustment only needed IF stats are fixed */
+/* UNCOMMENT if using fixed stats */
+/*
+.main-game-area {
+   padding-bottom: 140px; // Adjust if fixed stats height changes
+}
+.game-stats-container {
+   height: 130px; // Match common.css or adjust
+   min-height: 130px;
+}
+*/
+
+.stats-row {
+  flex-direction: column; /* Stack stats cards */
+  gap: 8px;
+  align-items: stretch; /* Make cards full width */
+}
+
+.stats-card {
+  width: 100%; /* Full width stats cards */
+  min-width: unset; /* Remove min-width */
+  box-sizing: border-box;
+}
+
+/* Stack user items/pairs again on small screens */
+.user-pairs-container,
+.user-items-container {
+  flex-direction: column; /* Back to vertical stack */
+  max-height: 250px; /* Restore max-height */
+  overflow-y: auto; /* Restore scroll */
+}
+
+.user-pair-item,
+.user-item {
+  width: 100%; /* Full width */
+  flex: 1 0 auto; /* Reset flex basis */
+  min-width: unset;
+}
+
+.navigation-bar {
+  /* common.css handles button sizing */
+}
+
+/* Make dialogs more compact */
+.solution-dialog-content { padding: 20px; }
+.level-complete-content { padding: 25px; }
+.level-complete-content h2 { font-size: 28px; }
+
+/* Homepage layout adjustments */
+.main-container { flex-direction: column; }
+.mini-game-container { flex-direction: column; }
+
+/* Editor Cytoscape size */
+#cy.cytoscape-container { /* Target editor specifically */
+  width: 95%;
+  height: 500px;
+}
+}
+
+
+/* Extra small screens (below 480px) */
+@media (max-width: 479.98px) {
+/* Height/min-height adjustments are in common.css */
+
+/* Padding adjustment only needed IF stats are fixed */
+/* UNCOMMENT if using fixed stats */
+/*
+.main-game-area {
+  padding-bottom: 160px; // Adjust if fixed stats height changes
+}
+.game-stats-container {
+  height: 150px; // Match common.css or adjust
+  min-height: 150px;
+}
+*/
+
+.navigation-bar button {
+  font-size: 11px;
+  padding: 5px 8px;
+}
+
+.popup-message {
+  padding: 10px 15px;
+  font-size: 14px;
+  max-width: 90%;
+}
+
+.gauge-markers span { font-size: 9px; }
+.stats-label { font-size: 11px; }
+.stats-value { font-size: 16px; }
+}
+
+
+/* Handle landscape orientation on mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+/* Adjustments for landscape */
+.main-game-area {
+  min-height: 60vh; /* Adjust min height */
+  /* Adjust padding if stats are fixed and change height */
+}
+.rightpanel {
+  max-height: 50vh; /* Adjust max height */
+}
+.game-stats-container {
+  /* Adjust height if needed */
+  /* height: 80px; */
+  /* min-height: 80px; */
+}
+.stats-row {
+  flex-direction: row; /* Put stats side-by-side */
+}
+.stats-card {
+  flex: 1; /* Allow stats cards to share space */
+  min-width: 140px; /* Minimum width */
+}
+.level-complete-content {
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 15px;
+}
+
+/* Make pairs/items display horizontally in landscape */
+.user-pairs-container,
+.user-items-container {
+  flex-direction: row;
+  flex-wrap: nowrap; /* Prevent wrapping */
+  overflow-x: auto; /* Allow horizontal scroll */
+  overflow-y: hidden;
+  max-height: none; /* Remove max-height */
+  padding-bottom: 10px; /* Space for scrollbar */
+}
+
+.user-pair-item,
+.user-item {
+  width: auto; /* Let content size */
+  flex: 0 0 auto; /* Don't grow/shrink, use natural width */
+  min-width: 180px; /* Minimum width */
+}
+}

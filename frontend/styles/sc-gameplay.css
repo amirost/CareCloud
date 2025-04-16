@@ -1,0 +1,90 @@
+/* SC (Set Cover) gameplay-specific styles */
+
+/* Import main styles and SC game components */
+@import url('./main.css');
+@import url('./components/cytoscape.css');
+@import url('./games/common.css');
+@import url('./games/sc-game.css');
+
+/* User items container */
+.user-items-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  max-height: calc(100% - 40px);
+  padding: 2px;
+}
+
+/* Antenna toggle in SC */
+.antenna-toggle {
+  width: 40px;
+  height: 20px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.antenna-toggle::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background-color: white;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: all 0.3s ease;
+}
+
+.antenna-toggle.active {
+  background-color: var(--color-success);
+}
+
+.antenna-toggle.active::after {
+  left: 22px;
+}
+
+/* SC specific responsive adjustments */
+@media (max-width: 1200px) {
+  .user-items-container {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 992px) {
+  .user-items-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+    max-height: none;
+    overflow-y: visible;
+  }
+  
+  .user-item {
+    flex: 1 0 calc(50% - 8px);
+    min-width: 240px;
+  }
+  
+  .antenna-items-container {
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+}
+
+@media (max-width: 576px) {
+  .user-items-container {
+    flex-direction: column;
+    max-height: 250px;
+    overflow-y: auto;
+  }
+  
+  .user-item {
+    flex: 1 0 100%;
+  }
+  
+  .antenna-title {
+    font-size: 14px;
+  }
+}

@@ -1,0 +1,94 @@
+/* --- START OF FILE layout.css --- */
+
+/* Core layout styles and grid systems */
+
+/* Flexbox layouts */
+.flex {
+  display: flex;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-around {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+/* Grid layouts */
+.grid {
+  display: grid;
+}
+
+.grid-center {
+  place-items: center;
+}
+
+/* Container layouts */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+}
+
+/* Main content area */
+.main-content {
+  flex: 1;
+  overflow: auto;
+  padding: var(--space-md);
+}
+
+/* Game layout styles are primarily handled in common.css */
+/* Keep .gameplay base structure if used elsewhere */
+.gameplay {
+  box-sizing: border-box;
+  position: relative;
+  background-size: cover;
+  background-position: center;
+}
+
+/* Add a subtle overlay to improve contrast */
+.gameplay::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 1;
+}
+
+/* Ensure content appears above the overlay */
+.gameplay > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* REMOVED THE CONFLICTING .game-container block from here */
+/* The correct styles for .game-container within the gameplay grid */
+/* are handled in common.css */

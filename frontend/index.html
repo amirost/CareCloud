@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mini-Game Hub for network simulation and modeling">
+    <title></title>
+    
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/editor.css">
+    
+</head>
+<body>
+   
+    <main>
+        <div class="main-container">
+            <div class="mini-game-container">
+                <div class="mini-game-RV">
+                    <img src="./Images/Accueil/atelier_RV.png" alt="Réseaux Verts Game" class="game-image">
+                    <button class="game-button" data-game="ReseauxVerts/RV-gameplay.html">Lancer</button>
+                </div>
+                <div class="mini-game-2">
+                    <img src="./Images/Accueil/innondation_zone_urbaine_card.png" alt="Urban Flooding Game" class="game-image">
+                    <button class="game-button" data-game="SetCover/SC-gameplay.html">Lancer</button>
+                </div>
+            </div>
+
+
+
+            <div class="mini-game-container">
+                <div class="mini-game-3">
+                    <img src="./Images/Accueil/Reconstruction_de_batiments_card.png" alt="Building Reconstruction Game" class="game-image">
+                    <button class="game-button" data-game="game3.html">Prochainement</button>
+                </div>
+                <div class="mini-game-4">
+                    <img src="./Images/Accueil/Regulation_du_trafic_routier_card.png" alt="Traffic Regulation Game" class="game-image">
+                    <button class="game-button" data-game="game4.html">Prochaineùent</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="editor-container">
+            <div class="editor-buttons">
+                <button id="editorModeBtn" class="primary-button">Editeur de niveaux</button>
+                <button id="createNewLevelBtn" class="action-button" style="display: none;">Créer un niveau</button>
+                <button id="BackHomeBtn" class="secondary-button" style="display: none;">Accueil</button>
+                <select id="modeSelector" class="mode-selector" style="display: none;">
+                    <option value="RV">Réseaux Verts</option>
+                    <option value="SC">Set cover</option>
+                    <option value="Cloud">Cloud</option>
+                </select>
+            </div>
+
+            <div id="graphListContainer" class="graph-list-container" style="display: none;">
+                <h3>Niveaux</h3>
+                <div id="graphListLoading">...</div>
+                <ul id="graphList" class="graph-list"></ul>
+            </div>
+
+            <div id="cy" class="cytoscape-container" style="display: none;"></div>
+        </div>
+    </main>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.25.0/cytoscape.min.js"></script>  
+    <script src="cytoscape-style.js"></script>
+    
+    <script src="graph-editor.js"></script>
+    <script src="graphSaverLoader.js"></script>
+    
+    <script src="cytoscape/cytoscape-core.js"></script>
+    <script src="cytoscape/cytoscape-node-manager.js"></script>
+    <script src="cytoscape/cytoscape-edge-manager.js"></script>
+    <script src="cytoscape/cytoscape-element-manager.js"></script>
+    <script src="cytoscape/cytoscape-properties-manager.js"></script>
+    <script src="cytoscape/cytoscape-events.js"></script>
+    <script src="cytoscape/cytoscape-editor-main.js"></script>
+    
+    <script src="index.js"></script>
+</body>
+</html>

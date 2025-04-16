@@ -1,0 +1,88 @@
+/* Main CSS file that imports all core and shared components */
+
+/* Import core styles */
+@import url('./core/variables.css');
+@import url('./core/reset.css');
+@import url('./core/layout.css');
+@import url('./core/typography.css');
+@import url('./core/animations.css');
+
+/* Import component styles */
+@import url('./components/buttons.css');
+@import url('./components/cards.css');
+@import url('./components/forms.css');
+@import url('./components/dialogs.css');
+@import url('./components/navigation.css');
+@import url('./components/panels.css');
+@import url('./components/stats.css');
+
+/* Import utility styles */
+@import url('./utilities/helpers.css');
+@import url('./utilities/responsive.css');
+
+/* Default body styles for the entire app */
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--color-bg-dark);
+  margin: 0;
+  padding: 20px;
+  color: var(--color-text-light);
+}
+
+/* Main layout for homepage */
+.main-container {
+  display: flex;
+  width: 100%;
+  margin: auto;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+  gap: 40px;
+  margin-top: 10%;
+}
+
+.mini-game-container {
+  display: flex;
+  flex-direction: row;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+/* Editor container styles */
+.editor-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.editor-buttons {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0;
+  flex-wrap: wrap;
+}
+
+/* Mode selector styling */
+.mode-selector {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-family: monospace;
+  margin: 5px;
+}
+
+/* Apply responsive styling for smaller screens */
+@media (max-width: 1200px) {
+  .main-container {
+    flex-direction: column;
+  }
+
+  .mini-game-container {
+    flex-direction: column;
+  }
+
+  .cytoscape-container {
+    width: 95%;
+    height: 500px;
+  }
+}

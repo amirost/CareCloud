@@ -186,79 +186,77 @@ export function initGraphLoader(gameState, uiManager) {
         // Render the graph in Cytoscape
         renderGraph(graph) {
             console.log("Rendering graph with", graph.nodes.length, "nodes and", graph.edges.length, "edges");
-            
+  
             // IMPORTANT: Clear existing elements before rendering new graph
             gameState.cy.elements().remove();
             console.log("Cleared existing elements");
             
             // Add nodes first
             graph.nodes.forEach(node => {
-                // Add the node
+              // Add the node
+              gameState.cy.add({
+                group: 'nodes',
+                data: {
+                  id: node.id,
+                  type: node.type,
+                  radius: node.radius || 50,
+                  haloId: node.haloId || null,
+                  consumption: node.consumption || 0,
+                  active: true // All antennas start as active
+                },
+                position: {
+                  x: node.x,
+                  y: node.y
+                },
+                grabbable: false 
+              });
+              
+              // If this is an antenna, also add its halo
+              if (node.type === 'antenna' && node.haloId) {
+                const isActive = node.active !== false;
+          
                 gameState.cy.add({
-                    group: 'nodes',
-                    data: {
-                        id: node.id,
-                        type: node.type,
-                        radius: node.radius || 50,
-                        haloId: node.haloId || null,
-                        consumption: node.consumption || 0,
-                        active: true // All antennas start as active
-                    },
-                    position: {
-                        x: node.x,
-                        y: node.y
-                    },
-                    grabbable: false 
+                  group: 'nodes',
+                  data: {
+                    id: node.haloId,
+                    type: 'antenna-halo',
+                    radius: node.radius || 50,
+                    active: true // Halo is active when antenna is active
+                  },
+                  position: {
+                    x: node.x,
+                    y: node.y
+                  },
+                  style: {
+                    'width': (node.radius || 50) * 2,
+                    'height': (node.radius || 50) * 2
+                  }
                 });
                 
-                // If this is an antenna, also add its halo
-                if (node.type === 'antenna' && node.haloId) {
-
-                    const isActive = node.active !== false;
-
-                    gameState.cy.add({
-                        group: 'nodes',
-                        data: {
-                            id: node.haloId,
-                            type: 'antenna-halo',
-                            radius: node.radius || 50,
-                            active: true // Halo is active when antenna is active
-                        },
-                        position: {
-                            x: node.x,
-                            y: node.y
-                        },
-                        style: {
-                            'width': (node.radius || 50) * 2,
-                            'height': (node.radius || 50) * 2
-                        }
-                    });
-                    // Puis récupérer le nœud halo ajouté pour définir sa visibilité
-                    const haloNode = gameState.cy.getElementById(node.haloId);
-                    if (haloNode && haloNode.length > 0) {
-                        setHaloVisibility(haloNode, isActive);
-                    }
-                    // Utiliser la fonction setHaloVisibility
-                    setHaloVisibility(haloNode, isActive);
-                    
-                    // Add antenna to active antennas if it's active
-                    if (isActive) {
-                        gameState.activeAntennas.add(node.id);
-                    }
+                // Puis récupérer le nœud halo ajouté pour définir sa visibilité
+                const haloNode = gameState.cy.getElementById(node.haloId);
+                if (haloNode && haloNode.length > 0) {
+                  setHaloVisibility(haloNode, isActive);
                 }
+                
+                // Add antenna to active antennas if it's active
+                if (isActive) {
+                  gameState.activeAntennas.add(node.id);
+                }
+              }
             });
             
             // Then add edges
             graph.edges.forEach(edge => {
-                gameState.cy.add({
-                    group: 'edges',
-                    data: {
-                        id: edge.id,
-                        source: edge.source,
-                        target: edge.target,
-                        thickness: edge.thickness || 2
-                    }
-                });
+              gameState.cy.add({
+                group: 'edges',
+                data: {
+                  id: edge.id,
+                  source: edge.source,
+                  target: edge.target,
+                  thickness: edge.thickness || 2
+                }
+              });
             });
             
             // Store minimum consumption if available
@@ -267,8 +265,27 @@ export function initGraphLoader(gameState, uiManager) {
             
             console.log("Graph loaded with minimum consumption:", gameState.minimumConsumption);
             
-            // Fit the graph in the viewport
+            // Fit the graph in the viewport with padding
             gameState.cy.fit();
+            
+            // Force an initial fit with padding for better visibility
+            setTimeout(() => {
+              if (gameState.cy) {
+                // Enable zoom and pan temporarily for the fit operation
+                gameState.cy.zoomingEnabled(true);
+                gameState.cy.panningEnabled(true);
+                
+                // Perform the fit
+                gameState.cy.resize();
+                gameState.cy.fit();
+                
+                // Disable zoom and pan if needed for gameplay
+                gameState.cy.zoomingEnabled(false);
+                gameState.cy.panningEnabled(false);
+                
+                console.log("Initial view reset applied");
+              }
+            }, 100); // Small delay to ensure layout is applied
             
             // Color user nodes
             this.colorUsers();
@@ -282,7 +299,7 @@ export function initGraphLoader(gameState, uiManager) {
             // Réinstaller les gestionnaires d'événements pour le survol des halos
             if (gameState.gamePhases && gameState.gamePhases.eventHandlers && 
                 gameState.gamePhases.eventHandlers.setupEventHandlers) {
-                gameState.gamePhases.eventHandlers.setupEventHandlers(gameState.gamePhases);
+              gameState.gamePhases.eventHandlers.setupEventHandlers(gameState.gamePhases);
             }
 
             // Start the game with Phase 1 - Use a safer approach

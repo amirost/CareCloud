@@ -185,7 +185,7 @@ export function initGraphLoader(gameState, uiManager) {
         // Render the graph in Cytoscape
         renderGraph(graph) {
             console.log("Rendering graph with", graph.nodes.length, "nodes and", graph.edges.length, "edges");
-            
+  
             // IMPORTANT: Clear existing elements before rendering new graph
             gameState.cy.elements().remove();
             console.log("Cleared existing elements");
@@ -195,59 +195,59 @@ export function initGraphLoader(gameState, uiManager) {
             
             // Add nodes first
             graph.nodes.forEach(node => {
-                // Add the node
+              // Add the node
+              gameState.cy.add({
+                group: 'nodes',
+                data: {
+                  id: node.id,
+                  type: node.type,
+                  radius: node.radius || 50,
+                  haloId: node.haloId || null,
+                  consumption: node.consumption || 0
+                },
+                position: {
+                  x: node.x,
+                  y: node.y
+                },
+                grabbable: false 
+              });
+              
+              // If this is an antenna, also add its halo
+              if (node.type === 'antenna' && node.haloId) {
                 gameState.cy.add({
-                    group: 'nodes',
-                    data: {
-                        id: node.id,
-                        type: node.type,
-                        radius: node.radius || 50,
-                        haloId: node.haloId || null,
-                        consumption: node.consumption || 0
-                    },
-                    position: {
-                        x: node.x,
-                        y: node.y
-                    },
-                    grabbable: false 
+                  group: 'nodes',
+                  data: {
+                    id: node.haloId,
+                    type: 'antenna-halo',
+                    radius: node.radius || 50
+                  },
+                  position: {
+                    x: node.x,
+                    y: node.y
+                  },
+                  style: {
+                    'width': (node.radius || 50) * 2,
+                    'height': (node.radius || 50) * 2
+                  }
                 });
-                
-                // If this is an antenna, also add its halo
-                if (node.type === 'antenna' && node.haloId) {
-                    gameState.cy.add({
-                        group: 'nodes',
-                        data: {
-                            id: node.haloId,
-                            type: 'antenna-halo',
-                            radius: node.radius || 50
-                        },
-                        position: {
-                            x: node.x,
-                            y: node.y
-                        },
-                        style: {
-                            'width': (node.radius || 50) * 2,
-                            'height': (node.radius || 50) * 2
-                        }
-                    });
-                }
+              }
             });
             
             // Then add edges
             graph.edges.forEach(edge => {
-                gameState.cy.add({
-                    group: 'edges',
-                    data: {
-                        id: edge.id,
-                        source: edge.source,
-                        target: edge.target,
-                        capacity: edge.capacity || 1,
-                        distance: edge.distance || 1,
-                        consumption: edge.consumption || 100,
-                        thickness: edge.thickness || 2,
-                        used: true
-                    }
-                });
+              gameState.cy.add({
+                group: 'edges',
+                data: {
+                  id: edge.id,
+                  source: edge.source,
+                  target: edge.target,
+                  capacity: edge.capacity || 1,
+                  distance: edge.distance || 1,
+                  consumption: edge.consumption || 100,
+                  thickness: edge.thickness || 2,
+                  used: true
+                }
+              });
             });
             
             // Store minimum consumption if available
@@ -256,8 +256,29 @@ export function initGraphLoader(gameState, uiManager) {
             
             console.log("Graph loaded with minimum consumption:", gameState.minimumConsumption);
             
-            // Fit the graph in the viewport
+            // Fit the graph in the viewport with padding
             gameState.cy.fit();
+            
+            // Force an initial fit with padding for better visibility
+            setTimeout(() => {
+              if (gameState.cy) {
+                // Enable zoom and pan temporarily for the fit operation
+                gameState.cy.zoomingEnabled(true);
+                gameState.cy.panningEnabled(true);
+                
+                // Perform the fit
+                gameState.cy.resize();
+                gameState.cy.fit();
+                
+                // Disable zoom and pan if needed for gameplay
+                if (options && options.disableZoom) {
+                  gameState.cy.zoomingEnabled(false);
+                  gameState.cy.panningEnabled(false);
+                }
+                
+                console.log("Initial view reset applied");
+              }
+            }, 100); // Small delay to ensure layout is applied
             
             // Color user nodes and organize them into pairs
             this.colorUsers();

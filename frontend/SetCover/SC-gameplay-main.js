@@ -7,9 +7,32 @@ import { initGamePhases } from './modules/SC-game-phases.js';
 import { initEventHandlers } from './modules/SC-event-handlers.js';
 import { initSolutionValidator } from './modules/SC-solution-validator.js';
 
-/**
- * Initialize and connect all components of the Set Cover game
- */
+function debounce(func, wait, immediate) {
+  let timeout;
+  return function executedFunction() {
+    const context = this;
+    const args = arguments;
+    const later = function() {
+      timeout = null;
+      if (!immediate) func.apply(context, args);
+    };
+    const callNow = immediate && !timeout;
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+    if (callNow) func.apply(context, args);
+  };
+}
+
+function handleResize(gameState) {
+  if (gameState && gameState.cy) {
+    console.log("Resizing Cytoscape instance...");
+    gameState.cy.resize();
+    gameState.cy.fit(null, 50); // Fit with 50px padding
+  } else {
+    console.warn("handleResize called but gameState or gameState.cy is not available.");
+  }
+}
+
 async function initializeGame() {
   console.log("Initializing Set Cover game...");
   
@@ -30,6 +53,10 @@ async function initializeGame() {
       attachToWindow: true,
       onInit: (cy) => {
         console.log("Cytoscape initialized with", cy.nodes().length, "nodes");
+        // Add resize handler
+        const debouncedResizeHandler = debounce(() => handleResize(gameState), 250);
+        window.addEventListener('resize', debouncedResizeHandler);
+        console.log("Resize listener added for Cytoscape.");
       }
     });
     
@@ -62,6 +89,33 @@ async function initializeGame() {
     // Set up UI event listeners
     uiManager.setupUIEventListeners(graphLoader, gamePhases);
     
+    const resetButton = document.getElementById('resetViewBtn');
+    if (resetButton) {
+      resetButton.addEventListener('click', () => {
+        console.log("Reset View button clicked.");
+        if (gameState.cy) {
+          // Enable zoom and pan temporarily for the fit operation
+          gameState.cy.zoomingEnabled(true);
+          gameState.cy.panningEnabled(true);
+          
+          // Perform the fit
+          gameState.cy.resize();
+          gameState.cy.fit();
+          
+          // Re-disable if needed for gameplay
+          gameState.cy.zoomingEnabled(false);
+          gameState.cy.panningEnabled(false);
+        } else {
+          console.error("Cannot reset view, Cytoscape instance not found.");
+        }
+      });
+      console.log("Reset View button listener added.");
+    } else {
+      console.warn("Reset View button (resetViewBtn) not found in the DOM.");
+    }
+
+
+
     // Expose debug function for development
     window.debugSCGame = () => {
       console.group("Set Cover Game Debug");

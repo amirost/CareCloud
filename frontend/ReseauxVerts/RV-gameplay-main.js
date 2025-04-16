@@ -7,11 +7,7 @@ import { initGamePhases } from './modules/RV-game-phases.js';
 import { initEventHandlers } from './modules/RV-event-handlers.js';
 import { initSolutionValidator } from './modules/RV-solution-validator.js';
 
-// --- START: Resize Handling Logic ---
 
-/**
- * Debounce function to limit the rate at which a function can fire.
- */
 function debounce(func, wait, immediate) {
   let timeout;
   return function executedFunction() {
@@ -28,28 +24,17 @@ function debounce(func, wait, immediate) {
   };
 }
 
-/**
- * Handles window resize events to update Cytoscape layout.
- */
+
 function handleResize(gameState) {
   if (gameState && gameState.cy) {
     console.log("Resizing Cytoscape instance...");
     gameState.cy.resize();
-    gameState.cy.fit(null, 100);
-    // Optional: Re-center or fit the graph after resize
-    // gameState.cy.fit(null, 50); // Fit with 50px padding
-    // gameState.cy.center();
+    gameState.cy.fit(null, 50); // Fit with 50px padding
   } else {
     console.warn("handleResize called but gameState or gameState.cy is not available.");
   }
 }
 
-// --- END: Resize Handling Logic ---
-
-
-/**
- * Initialize and connect all components of the RV game
- */
 async function initializeGame() {
   console.log("Initializing Green Networks game...");
 
@@ -67,15 +52,13 @@ async function initializeGame() {
     // Initialize Cytoscape with custom options
     await initCytoscape(gameState, {
       containerId: 'cy',
-      attachToWindow: true, // Keep this if you need global cy access (less recommended)
+      attachToWindow: true,
       onInit: (cy) => {
         console.log("Cytoscape initialized with", cy.nodes().length, "nodes");
         // --- Add Resize Listener AFTER cy is initialized ---
         const debouncedResizeHandler = debounce(() => handleResize(gameState), 250); // 250ms delay
         window.addEventListener('resize', debouncedResizeHandler);
         console.log("Resize listener added for Cytoscape.");
-         // Optional: Trigger initial fit/center after layout is ready
-         // setTimeout(() => handleResize(gameState), 100); // Small delay to ensure layout applied
       }
     });
 
@@ -109,28 +92,29 @@ async function initializeGame() {
     uiManager.setupUIEventListeners(graphLoader, gamePhases);
      // --- ADD LISTENER FOR NEW BUTTON ---
      const resetButton = document.getElementById('resetViewBtn');
-     if (resetButton) {
-       resetButton.addEventListener('click', () => {
-         console.log("Reset View button clicked.");
-         if (gameState.cy) {
-          console.log("dsfdsffsdfsdfsdfsdfsdfdsfsdsdfsdfdsf");
-          gameState.cy.zoomingEnabled(true);
-          gameState.cy.panningEnabled(true);
-          // Perform the fit
-
-          gameState.cy.resize();
-          gameState.cy.fit(null,);
-          // Re-disable if needed for gameplay
-          gameState.cy.zoomingEnabled(false);
-          gameState.cy.panningEnabled(false);
-         } else {
-           console.error("Cannot reset view, Cytoscape instance not found.");
-         }
-       });
-       console.log("Reset View button listener added.");
-     } else {
+      if (resetButton) {
+        resetButton.addEventListener('click', () => {
+          console.log("Reset View button clicked.");
+          if (gameState.cy) {
+            // Enable zoom and pan temporarily for the fit operation
+            gameState.cy.zoomingEnabled(true);
+            gameState.cy.panningEnabled(true);
+            
+            // Perform the fit
+            gameState.cy.resize();
+            gameState.cy.fit(null);
+            
+            // Re-disable if needed for gameplay
+            gameState.cy.zoomingEnabled(false);
+            gameState.cy.panningEnabled(false);
+          } else {
+            console.error("Cannot reset view, Cytoscape instance not found.");
+          }
+        });
+        console.log("Reset View button listener added.");
+      } else {
         console.warn("Reset View button (resetViewBtn) not found in the DOM.");
-     }
+      }
      // --- END OF NEW BUTTON LISTENER ---
 
     // Expose debug function for development

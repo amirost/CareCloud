@@ -3,6 +3,7 @@
 @import url('./components/cytoscape.css');
 @import url('./games/common.css');
 @import url('./games/rv-game.css');
+@import url('./components/tool-buttons.css');
 
 /* User pairs container styling */
 .user-pairs-container {
@@ -52,3 +53,4 @@
     flex: 1 0 100%;
   }
 }
+

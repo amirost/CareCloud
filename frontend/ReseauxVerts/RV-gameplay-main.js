@@ -6,8 +6,13 @@ import { initGraphLoader } from './modules/RV-graph-loader.js';
 import { initGamePhases } from './modules/RV-game-phases.js';
 import { initEventHandlers } from './modules/RV-event-handlers.js';
 import { initSolutionValidator } from './modules/RV-solution-validator.js';
+import { initPathFinder } from './modules/RV-path-finder.js'; // Import the new path finder module
 
+// --- START: Resize Handling Logic ---
 
+/**
+ * Debounce function to limit the rate at which a function can fire.
+ */
 function debounce(func, wait, immediate) {
   let timeout;
   return function executedFunction() {
@@ -24,17 +29,25 @@ function debounce(func, wait, immediate) {
   };
 }
 
-
+/**
+ * Handles window resize events to update Cytoscape layout.
+ */
 function handleResize(gameState) {
   if (gameState && gameState.cy) {
     console.log("Resizing Cytoscape instance...");
     gameState.cy.resize();
-    gameState.cy.fit(null, 50); // Fit with 50px padding
+    gameState.cy.fit(null, 100);
   } else {
     console.warn("handleResize called but gameState or gameState.cy is not available.");
   }
 }
 
+// --- END: Resize Handling Logic ---
+
+
+/**
+ * Initialize and connect all components of the RV game
+ */
 async function initializeGame() {
   console.log("Initializing Green Networks game...");
 
@@ -52,7 +65,7 @@ async function initializeGame() {
     // Initialize Cytoscape with custom options
     await initCytoscape(gameState, {
       containerId: 'cy',
-      attachToWindow: true,
+      attachToWindow: true, // Keep this if you need global cy access (less recommended)
       onInit: (cy) => {
         console.log("Cytoscape initialized with", cy.nodes().length, "nodes");
         // --- Add Resize Listener AFTER cy is initialized ---
@@ -79,6 +92,10 @@ async function initializeGame() {
     gameState.solutionValidator = solutionValidator;
     solutionValidator.setupKeyboardHandlers();
 
+    // Initialize path finder for automated path finding
+    const pathFinder = initPathFinder(gameState, uiManager);
+    gameState.pathFinder = pathFinder;
+
     // Store game phases in gameState for access by other modules
     gameState.gamePhases = gamePhases;
 
@@ -90,33 +107,33 @@ async function initializeGame() {
 
     // Set up UI event listeners
     uiManager.setupUIEventListeners(graphLoader, gamePhases);
-     // --- ADD LISTENER FOR NEW BUTTON ---
-     const resetButton = document.getElementById('resetViewBtn');
-      if (resetButton) {
-        resetButton.addEventListener('click', () => {
-          console.log("Reset View button clicked.");
-          if (gameState.cy) {
-            // Enable zoom and pan temporarily for the fit operation
-            gameState.cy.zoomingEnabled(true);
-            gameState.cy.panningEnabled(true);
-            
-            // Perform the fit
-            gameState.cy.resize();
-            gameState.cy.fit(null);
-            
-            // Re-disable if needed for gameplay
-            gameState.cy.zoomingEnabled(false);
-            gameState.cy.panningEnabled(false);
-          } else {
-            console.error("Cannot reset view, Cytoscape instance not found.");
-          }
-        });
-        console.log("Reset View button listener added.");
-      } else {
-        console.warn("Reset View button (resetViewBtn) not found in the DOM.");
-      }
-     // --- END OF NEW BUTTON LISTENER ---
-
+    
+    // Set up path finder buttons
+    pathFinder.setupPathFinderButtons();
+    
+    // --- ADD LISTENER FOR NEW BUTTON ---
+    const resetButton = document.getElementById('resetViewBtn');
+    if (resetButton) {
+      resetButton.addEventListener('click', () => {
+        console.log("Reset View button clicked.");
+        if (gameState.cy) {
+          gameState.cy.zoomingEnabled(true);
+          gameState.cy.panningEnabled(true);
+          // Perform the fit
+          gameState.cy.resize();
+          gameState.cy.fit(null,);
+          // Re-disable if needed for gameplay
+          gameState.cy.zoomingEnabled(false);
+          gameState.cy.panningEnabled(false);
+        } else {
+          console.error("Cannot reset view, Cytoscape instance not found.");
+        }
+      });
+      console.log("Reset View button listener added.");
+    } else {
+      console.warn("Reset View button (resetViewBtn) not found in the DOM.");
+    }
+    
     // Expose debug function for development
     window.debugRVGame = () => {
       console.group("Green Networks Game Debug");
@@ -130,7 +147,8 @@ async function initializeGame() {
         eventHandlers: !!eventHandlers,
         uiManager: !!uiManager,
         graphLoader: !!graphLoader,
-        solutionValidator: !!solutionValidator
+        solutionValidator: !!solutionValidator,
+        pathFinder: !!pathFinder
       });
       console.groupEnd();
       return "Debug information logged to console";
@@ -140,7 +158,6 @@ async function initializeGame() {
     graphLoader.fetchRVGraphs();
     console.log("Game initialization complete");
    
-
   } catch (error) {
     console.error("Error initializing game:", error);
     // Display error more prominently if needed

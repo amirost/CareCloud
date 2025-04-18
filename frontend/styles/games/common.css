@@ -74,7 +74,6 @@
   position: relative; /* Already set, needed for absolute children */
   box-sizing: border-box;
   padding-bottom: 120px; /* Existing space for stats */
-  padding-top: 50px; /* NEW: Add space at the top for the popup */
 }
 
 /* Popup container at the top of center column */

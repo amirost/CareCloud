@@ -2,29 +2,27 @@
 
 /* Navigation bar */
 .navigation-bar {
-    display: flex;
-    max-width: 100%; /* Ensure it doesn't exceed parent width */
-    box-sizing: border-box; /* Include padding in width */
-    gap: var(--space-md);
-    padding: var(--space-md);
-    background-color: var(--color-bg-panel);
-    border-radius: 10px;
-    box-shadow: var(--shadow-md);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-  }
-  
-  .navigation-bar button {
-    background-color: var(--color-primary);
-    color: white;
-    border: none;
-    padding: 10px 16px;
-    border-radius: 6px;
-    font-weight: 500;
-    letter-spacing: 0.3px;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-  }
+  display: flex;
+  flex-wrap: wrap; /* Critical: Ensure buttons wrap to next line */
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  background-color: var(--color-bg-panel);
+  border-radius: 10px;
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  width: 100%; /* Ensure it uses full width of container */
+}
+
+.navigation-bar button {
+  flex: 0 1 auto; /* Don't grow, allow shrinking, auto basis */
+  white-space: nowrap; /* Keep button text on one line */
+  margin: 4px; /* Space between buttons */
+  min-width: 0; /* Allow buttons to shrink below their content width */
+  padding: 8px 12px; /* Slightly reduced padding if needed */
+}
   
   .navigation-bar button:hover {
     background-color: var(--color-primary-dark);
@@ -147,4 +145,17 @@
     color: var(--color-text-light);
     border-bottom-color: var(--color-accent);
     font-weight: 500;
+  }
+
+  @media (max-width: 480px) {
+    .navigation-bar {
+      gap: 4px;
+      padding: 6px;
+    }
+    
+    .navigation-bar button {
+      flex: 1 1 100%; /* On very small screens, make buttons full width */
+      font-size: 14px;
+      padding: 6px 8px;
+    }
   }

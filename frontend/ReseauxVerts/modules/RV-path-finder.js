@@ -33,26 +33,52 @@ export function initPathFinder(gameState, uiManager) {
         
         // Find and connect all user pairs using the shortest paths
         findAllShortestPaths() {
-            // Check if in the right phase
-            if (gameState.phase !== 1 && gameState.phase !== 5) {
-                uiManager.showNotification("Cette action n'est disponible qu'aux phases 1 et 5", "error");
-                return;
+            // These path finding functions should work in any phase to continue existing connections
+            
+            // First, check if there's an in-progress path that needs to be completed
+            if (gameState.currentPath && gameState.currentPath.current && gameState.currentUserPair !== null) {
+                console.log("There's an in-progress path. Completing it first...");
+                // Complete the current path first
+                this.findNextShortestPath();
+                
+                // After completing the in-progress path, continue with the rest
+                console.log("Now finding paths for remaining pairs...");
             }
             
-            // Reset the game first to ensure a clean state
-            if (gameState.gamePhases && gameState.gamePhases.resetGame) {
+            // Check if any connections already exist
+            const hasExistingConnections = gameState.connectedUsers.size > 0;
+            let pairsAlreadyConnected = 0;
+            
+            // Count how many pairs are already connected
+            gameState.userPairs.forEach(pair => {
+                if (pair.connected) {
+                    pairsAlreadyConnected++;
+                }
+            });
+            
+            // Only reset the game if no connections exist yet
+            if (!hasExistingConnections && gameState.gamePhases && gameState.gamePhases.resetGame) {
+                console.log("No existing connections found, starting from scratch");
                 gameState.gamePhases.resetGame();
+            } else if (pairsAlreadyConnected > 0) {
+                console.log(`Keeping ${pairsAlreadyConnected} existing connections and adding remaining paths`);
             }
             
-            console.log("Finding all shortest paths for user pairs");
+            console.log("Finding shortest paths for remaining unconnected user pairs");
             
             // Flag to track if all pairs were successfully connected
             let allConnected = true;
+            let processedPairs = 0;
             
             // Process each user pair
             gameState.userPairs.forEach((pair, pairIndex) => {
                 // Skip already connected pairs
-                if (pair.connected) return;
+                if (pair.connected) {
+                    console.log(`Pair ${pairIndex} already connected, skipping`);
+                    return;
+                }
+                
+                processedPairs++;
                 
                 // Only process pairs with exactly 2 users
                 if (pair.users.length !== 2) {
@@ -81,9 +107,11 @@ export function initPathFinder(gameState, uiManager) {
             uiManager.updateStats();
             
             // Provide feedback to the user
-            if (allConnected) {
-                uiManager.showNotification("Toutes les paires d'utilisateurs ont été connectées", "success");
-                
+            if (processedPairs === 0) {
+                uiManager.showNotification("Toutes les paires sont déjà connectées", "success");
+                this.optimizeUnusedLinks();
+            } else if (allConnected) {
+                uiManager.showNotification("Toutes les paires d'utilisateurs sont maintenant connectées", "success");
                 // If all users are connected, optimize by turning off unused links
                 this.optimizeUnusedLinks();
             } else {
@@ -93,16 +121,91 @@ export function initPathFinder(gameState, uiManager) {
         
         // Find and connect only the next unconnected user pair
         findNextShortestPath() {
-            // Check if in the right phase
-            if (gameState.phase !== 1 && gameState.phase !== 5) {
-                uiManager.showNotification("Cette action n'est disponible qu'aux phases 1 et 5", "error");
+            // Allow this to work in any phase to complete in-progress connections
+            
+            console.log("Finding shortest path for next connection");
+            
+            // If there's an in-progress path, continue from the current point
+            if (gameState.currentPath && gameState.currentPath.current && gameState.currentUserPair !== null) {
+                console.log(`Continuing in-progress path from ${gameState.currentPath.current}`);
+                
+                const currentPair = gameState.userPairs[gameState.currentUserPair];
+                const currentNode = gameState.cy.getElementById(gameState.currentPath.current);
+                
+                if (!currentNode || !currentNode.length) {
+                    console.error(`Cannot find current node: ${gameState.currentPath.current}`);
+                    uiManager.showNotification("Erreur: Point actuel non trouvé", "error");
+                    return;
+                }
+                
+                // Find the other user in the pair (the one not selected)
+                const selectedUserId = gameState.selectedUser;
+                const otherUserId = currentPair.users.find(id => id !== selectedUserId);
+                
+                if (!otherUserId) {
+                    console.error("Cannot find the other user in the pair");
+                    uiManager.showNotification("Erreur: Impossible de trouver l'autre utilisateur de la paire", "error");
+                    return;
+                }
+                
+                const otherUser = gameState.cy.getElementById(otherUserId);
+                if (!otherUser) {
+                    console.error(`Cannot find user with ID ${otherUserId}`);
+                    uiManager.showNotification("Erreur: Utilisateur non trouvé", "error");
+                    return;
+                }
+                
+                // Find best antenna for the other user
+                const bestAntennaForOther = this.findBestAntenna(otherUser);
+                
+                if (!bestAntennaForOther) {
+                    console.error("No antenna in range for the other user");
+                    uiManager.showNotification("Aucune antenne à portée du second utilisateur", "error");
+                    return;
+                }
+                
+                // Connect other user to its best antenna
+                this.connectUserToAntenna(otherUser, bestAntennaForOther, currentPair.color);
+                
+                // Find shortest path from current node to the other user's antenna
+                const path = this.findShortestPath(currentNode, bestAntennaForOther);
+                
+                if (!path || path.length < 2) {
+                    console.error("No valid path found to complete the connection");
+                    uiManager.showNotification("Impossible de trouver un chemin pour compléter la connexion", "error");
+                    return;
+                }
+                
+                // Create path connections
+                this.createPathConnections(path, currentPair.color);
+                
+                // Mark the pair as connected
+                currentPair.connected = true;
+                gameState.connectedUsers.add(selectedUserId);
+                gameState.connectedUsers.add(otherUserId);
+                
+                // Reset path state
+                gameState.selectedUser = null;
+                gameState.selectedUserColor = null;
+                gameState.currentUserPair = null;
+                gameState.currentPath = null;
+                
+                // Update UI
+                uiManager.updateStats();
+                uiManager.showNotification("Paire connectée avec succès", "success");
+                
+                // Check if all pairs are now connected
+                const allConnected = gameState.userPairs.every(pair => pair.connected);
+                if (allConnected) {
+                    uiManager.showNotification("Toutes les paires sont connectées!", "success");
+                    this.optimizeUnusedLinks();
+                }
+                
                 return;
             }
             
-            console.log("Finding shortest path for next unconnected user pair");
-            
-            // If a user is already selected, continue from there
-            if (gameState.selectedUser && gameState.currentUserPair !== null) {
+            // If a user is already selected but no path has been started yet
+            else if (gameState.selectedUser && gameState.currentUserPair !== null) {
                 console.log(`Continuing existing path for user ${gameState.selectedUser}`);
                 
                 // The current pair is already being processed
@@ -123,9 +226,7 @@ export function initPathFinder(gameState, uiManager) {
                     return;
                 }
                 
-                // Find nearest antenna to the other user
-                const nearestAntennaToOther = this.findNearestAntenna(otherUser);
-                
+                // Find nearest antenna to the selected user
                 const selectedUser = gameState.cy.getElementById(gameState.selectedUser);
                 const bestAntenna = this.findBestAntenna(selectedUser, otherUser);
                 
@@ -181,12 +282,104 @@ export function initPathFinder(gameState, uiManager) {
                 // If we need different antennas, find best antenna for other user
                 const bestAntennaForOther = this.findBestAntenna(otherUser, selectedUser);
                 
-
-        }
-    },
+                if (!bestAntennaForOther) {
+                    console.error("No antenna in range for the other user");
+                    uiManager.showNotification("Aucune antenne à portée du second utilisateur", "error");
+                    return;
+                }
+                
+                // Connect other user to its best antenna
+                this.connectUserToAntenna(otherUser, bestAntennaForOther, currentPair.color);
+                
+                // Find shortest path between the two antennas
+                const path = this.findShortestPath(bestAntenna, bestAntennaForOther);
+                
+                if (!path || path.length < 2) {
+                    console.error("No valid path found between antennas");
+                    uiManager.showNotification("Impossible de trouver un chemin entre les antennes", "error");
+                    return;
+                }
+                
+                // Create path connections
+                this.createPathConnections(path, currentPair.color);
+                
+                // Mark the pair as connected
+                currentPair.connected = true;
+                gameState.connectedUsers.add(selectedUser.id());
+                gameState.connectedUsers.add(otherUser.id());
+                
+                // Reset selection state
+                gameState.selectedUser = null;
+                gameState.selectedUserColor = null;
+                gameState.currentUserPair = null;
+                
+                // Update UI
+                uiManager.updateStats();
+                uiManager.showNotification("Paire connectée avec succès", "success");
+                
+                // Check if all pairs are now connected
+                const allConnected = gameState.userPairs.every(pair => pair.connected);
+                if (allConnected) {
+                    uiManager.showNotification("Toutes les paires sont connectées!", "success");
+                    this.optimizeUnusedLinks();
+                }
+                
+                return;
+            }
+            
+            // If no user is selected, find the next unconnected pair
+            const nextPairIndex = gameState.userPairs.findIndex(pair => !pair.connected);
+            
+            if (nextPairIndex === -1) {
+                console.log("All pairs are already connected");
+                uiManager.showNotification("Toutes les paires sont déjà connectées", "success");
+                return;
+            }
+            
+            const nextPair = gameState.userPairs[nextPairIndex];
+            console.log(`Found next unconnected pair: ${nextPairIndex}`);
+            
+            // Only process pairs with exactly 2 users
+            if (nextPair.users.length !== 2) {
+                console.log(`Skipping pair ${nextPairIndex} with ${nextPair.users.length} users (expected 2)`);
+                uiManager.showNotification("Impossible de connecter des paires incomplètes", "error");
+                return;
+            }
+            
+            const [user1Id, user2Id] = nextPair.users;
+            const user1 = gameState.cy.getElementById(user1Id);
+            const user2 = gameState.cy.getElementById(user2Id);
+            
+            if (!user1 || !user2) {
+                console.error(`Cannot find users with IDs ${user1Id} and/or ${user2Id}`);
+                uiManager.showNotification("Erreur: Utilisateurs non trouvés", "error");
+                return;
+            }
+            
+            // Try to connect this pair
+            const connected = this.connectUserPair(user1, user2, nextPair, nextPairIndex);
+            
+            // Update UI
+            uiManager.updateStats();
+            
+            if (connected) {
+                uiManager.showNotification("Paire connectée avec succès", "success");
+                
+                // Check if all pairs are now connected
+                const allConnected = gameState.userPairs.every(pair => pair.connected);
+                if (allConnected) {
+                    uiManager.showNotification("Toutes les paires sont connectées!", "success");
+                    this.optimizeUnusedLinks();
+                }
+            } else {
+                uiManager.showNotification("Impossible de connecter la paire d'utilisateurs", "error");
+            }
+        },
         
         // Apply the saved optimal solution if one exists
         applyOptimalSolution() {
+            // This function resets everything regardless of phase
+            
             // Check if a minimum consumption value exists (indicating an optimal solution)
             if (gameState.minimumConsumption === null || gameState.minimumConsumption === undefined) {
                 uiManager.showNotification("Aucune solution optimale enregistrée pour ce niveau", "error");
@@ -194,6 +387,11 @@ export function initPathFinder(gameState, uiManager) {
             }
             
             console.log(`Applying optimal solution with consumption: ${gameState.minimumConsumption}`);
+            
+            // For optimal solution, we always reset and start from scratch
+            if (gameState.gamePhases && gameState.gamePhases.resetGame) {
+                gameState.gamePhases.resetGame();
+            }
             
             // Start by finding all shortest paths (complete solution)
             this.findAllShortestPaths();
@@ -494,13 +692,70 @@ export function initPathFinder(gameState, uiManager) {
                 // Mark the edge as used
                 edge.data('used', true);
                 
-                // Update edge visualization
+                // Update edge visualization - FIX: Access the event handler directly
                 if (gameState.gamePhases && 
-                    gameState.gamePhases.eventHandlers && 
-                    gameState.gamePhases.eventHandlers.updateEdgeVisualization) {
-                    gameState.gamePhases.eventHandlers.updateEdgeVisualization(edge);
+                    gameState.gamePhases.eventHandlers) {
+                    try {
+                        gameState.gamePhases.eventHandlers.updateEdgeVisualization(edge);
+                    } catch (error) {
+                        // If the above path doesn't work, try fallback methods
+                        console.warn("Couldn't access updateEdgeVisualization via gamePhases.eventHandlers, using fallback...");
+                        this.fallbackEdgeVisualization(edge, color);
+                    }
+                } else {
+                    // Fallback method to visualize edges if the event handler isn't available
+                    this.fallbackEdgeVisualization(edge, color);
                 }
             });
+        },
+        
+        // Fallback method to visualize edges when the event handler isn't available
+        fallbackEdgeVisualization(edge, color) {
+            // Instead of creating complex parallel edges, just mark the original edge
+            // and apply a simpler styling approach
+            const edgeId = edge.id();
+            
+            // First, make sure the edge is marked as used for consumption calculations
+            edge.data('used', true);
+            
+            // Create a simple overlay edge without complex styling properties
+            try {
+                // Create a simpler edge visualization with basic properties
+                const sourceId = edge.source().id();
+                const targetId = edge.target().id();
+                const virtualEdgeId = `overlay-${edgeId}-${Math.round(Math.random() * 10000)}`;  // Unique ID
+                
+                gameState.cy.add({
+                    group: 'edges',
+                    data: {
+                        id: virtualEdgeId,
+                        source: sourceId,
+                        target: targetId,
+                        virtual: true
+                    }
+                }).style({
+                    'line-color': color,
+                    'width': 3,
+                    'z-index': 9,
+                    'opacity': 0.7,
+                    'line-style': 'solid'
+                });
+                
+                console.log(`Created simple overlay for edge ${edgeId} with color ${color}`);
+            } catch (error) {
+                // If even the simple overlay fails, just style the original edge
+                console.warn(`Could not create overlay, applying highlight to original edge ${edgeId}`, error);
+                
+                // Add a class to the original edge to show it's used
+                edge.addClass('path');
+                
+                // Simple direct style change that's less likely to cause issues
+                try {
+                    edge.style('line-color', color);
+                } catch (styleError) {
+                    console.error('Failed to apply even basic styling, edge will use default style', styleError);
+                }
+            }
         },
         
         // Optimize by turning off unused links

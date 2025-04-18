@@ -270,11 +270,8 @@ export function initGraphLoader(gameState, uiManager) {
                 gameState.cy.resize();
                 gameState.cy.fit();
                 
-                // Disable zoom and pan if needed for gameplay
-                if (options && options.disableZoom) {
-                  gameState.cy.zoomingEnabled(false);
-                  gameState.cy.panningEnabled(false);
-                }
+                gameState.cy.zoomingEnabled(false);
+                gameState.cy.panningEnabled(false);
                 
                 console.log("Initial view reset applied");
               }

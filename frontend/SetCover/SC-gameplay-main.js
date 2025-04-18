@@ -6,6 +6,7 @@ import { initGraphLoader } from './modules/SC-graph-loader.js';
 import { initGamePhases } from './modules/SC-game-phases.js';
 import { initEventHandlers } from './modules/SC-event-handlers.js';
 import { initSolutionValidator } from './modules/SC-solution-validator.js';
+import { initPathFinder } from './modules/SC-path-finder.js';
 
 function debounce(func, wait, immediate) {
   let timeout;
@@ -77,6 +78,10 @@ async function initializeGame() {
     gameState.solutionValidator = solutionValidator;
     solutionValidator.setupKeyboardHandlers();
 
+    // Initialize path finder for automated antenna optimization
+    const pathFinder = initPathFinder(gameState, uiManager);
+    gameState.pathFinder = pathFinder;
+
     // Store game phases in gameState for access by other modules
     gameState.gamePhases = gamePhases;
     
@@ -88,6 +93,9 @@ async function initializeGame() {
     
     // Set up UI event listeners
     uiManager.setupUIEventListeners(graphLoader, gamePhases);
+    
+    // Set up path finder buttons
+    pathFinder.setupPathFinderButtons();
     
     const resetButton = document.getElementById('resetViewBtn');
     if (resetButton) {
@@ -114,8 +122,6 @@ async function initializeGame() {
       console.warn("Reset View button (resetViewBtn) not found in the DOM.");
     }
 
-
-
     // Expose debug function for development
     window.debugSCGame = () => {
       console.group("Set Cover Game Debug");
@@ -129,7 +135,8 @@ async function initializeGame() {
         eventHandlers: !!eventHandlers,
         uiManager: !!uiManager,
         graphLoader: !!graphLoader,
-        solutionValidator: !!solutionValidator
+        solutionValidator: !!solutionValidator,
+        pathFinder: !!pathFinder
       });
       console.groupEnd();
       return "Debug information logged to console";

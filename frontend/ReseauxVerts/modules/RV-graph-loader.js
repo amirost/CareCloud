@@ -14,10 +14,13 @@ export function initGraphLoader(gameState, uiManager) {
                     const result = await window.graphPersistence.fetchGraphs("RV");
                     
                     if (result.success && result.data.length > 0) {
-                        console.log(`Found ${result.data.length} graphs`);
-                        uiManager.displayGraphList(result.data, this);
+                        // Filter to ensure only RV graphs are displayed
+                        const rvGraphs = result.data.filter(graph => graph.mode === "RV");
+                        
+                        console.log(`Found ${rvGraphs.length} RV graphs`);
+                        uiManager.displayGraphList(rvGraphs, this);
                     } else {
-                        console.log("No graphs found");
+                        console.log("No RV graphs found");
                         document.getElementById("graphList").innerHTML = 
                             "<p>No Green Networks levels found. Create some in the Editor first!</p>";
                     }
@@ -36,18 +39,21 @@ export function initGraphLoader(gameState, uiManager) {
                 const result = await response.json();
                 
                 if (result.success && result.data.length > 0) {
-                    console.log(`Found ${result.data.length} graphs`);
-                    uiManager.displayGraphList(result.data, this);
+                    // Double-check that all graphs are RV mode
+                    const rvGraphs = result.data.filter(graph => graph.mode === "RV");
+                    
+                    console.log(`Found ${rvGraphs.length} RV graphs`);
+                    uiManager.displayGraphList(rvGraphs, this);
                 } else {
-                    console.log("No graphs found");
+                    console.log("No RV graphs found");
                     document.getElementById("graphList").innerHTML = 
-                        "<p>Aucun niveau trouvé. Créez-en d'abord dans l'éditeur !</p>";
+                        "<p>No Green Networks levels found. Create some in the Editor first!</p>";
                 }
                 uiManager.hideGraphListLoading();
             } catch (error) {
                 console.error("Error fetching graphs:", error);
                 document.getElementById("graphList").innerHTML = 
-                    "<p>Erreur lors du chargement des niveaux. Veuillez réessayer</p>";
+                    "<p>Error loading levels. Please try again.</p>";
                 uiManager.hideGraphListLoading();
             }
         },

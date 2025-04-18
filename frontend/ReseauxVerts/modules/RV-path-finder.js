@@ -644,14 +644,12 @@ export function initPathFinder(gameState, uiManager) {
                         const capacity = edge.data('capacity') || 1;
                         const distance = edge.data('distance') || 1;
                         
-                        // Used edges should be preferred over unused ones
-                        // because they're already part of other paths
-                        const isUsed = gameState.usedLinks.has(edge.id());
-                        const usedFactor = isUsed ? 0.5 : 1;
+                        // No preference for used edges - simply find the shortest path
+                        // based on distance and capacity
                         
-                        // Weight formula: distance / capacity * usedFactor
-                        // This prioritizes high-capacity links and reuses existing paths
-                        return (distance / capacity) * usedFactor;
+                        // Weight formula: distance / capacity
+                        // This prioritizes high-capacity links for shorter logical paths
+                        return (distance / capacity);
                     }
                 });
                 

@@ -15,10 +15,13 @@ export function initGraphLoader(gameState, uiManager) {
                     const result = await window.graphPersistence.fetchGraphs("SC");
                     
                     if (result.success && result.data.length > 0) {
-                        console.log(`Found ${result.data.length} graphs`);
-                        uiManager.displayGraphList(result.data, this);
+                        // Filter to ensure only SC graphs are displayed
+                        const scGraphs = result.data.filter(graph => graph.mode === "SC");
+                        
+                        console.log(`Found ${scGraphs.length} SC graphs`);
+                        uiManager.displayGraphList(scGraphs, this);
                     } else {
-                        console.log("No graphs found");
+                        console.log("No SC graphs found");
                         document.getElementById("graphList").innerHTML = 
                             "<p>No Set Cover levels found. Create some in the Editor first!</p>";
                     }
@@ -37,18 +40,21 @@ export function initGraphLoader(gameState, uiManager) {
                 const result = await response.json();
                 
                 if (result.success && result.data.length > 0) {
-                    console.log(`Found ${result.data.length} graphs`);
-                    uiManager.displayGraphList(result.data, this);
+                    // Double-check that all graphs are SC mode
+                    const scGraphs = result.data.filter(graph => graph.mode === "SC");
+                    
+                    console.log(`Found ${scGraphs.length} SC graphs`);
+                    uiManager.displayGraphList(scGraphs, this);
                 } else {
-                    console.log("No graphs found");
+                    console.log("No SC graphs found");
                     document.getElementById("graphList").innerHTML = 
-                        "<p>Aucun niveau trouvé. Créez-en d'abord dans l'éditeur !</p>";
+                        "<p>No Set Cover levels found. Create some in the Editor first!</p>";
                 }
                 uiManager.hideGraphListLoading();
             } catch (error) {
                 console.error("Error fetching graphs:", error);
                 document.getElementById("graphList").innerHTML = 
-                    "<p>Erreur lors du chargement des niveaux. Veuillez réessayer</p>";
+                    "<p>Error loading levels. Please try again.</p>";
                 uiManager.hideGraphListLoading();
             }
         },

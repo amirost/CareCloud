@@ -6,7 +6,8 @@ import { initGraphLoader } from './modules/RV-graph-loader.js';
 import { initGamePhases } from './modules/RV-game-phases.js';
 import { initEventHandlers } from './modules/RV-event-handlers.js';
 import { initSolutionValidator } from './modules/RV-solution-validator.js';
-import { initPathFinder } from './modules/RV-path-finder.js'; // Import the new path finder module
+import { initPathFinder } from './modules/RV-path-finder.js';
+import { initCourseContent } from '../course-content.js';
 
 // --- START: Resize Handling Logic ---
 
@@ -96,6 +97,9 @@ async function initializeGame() {
     const pathFinder = initPathFinder(gameState, uiManager);
     gameState.pathFinder = pathFinder;
 
+    const courseContent = initCourseContent(gameState, uiManager);
+    gameState.courseContentModule = courseContent;
+
     // Store game phases in gameState for access by other modules
     gameState.gamePhases = gamePhases;
 
@@ -110,6 +114,8 @@ async function initializeGame() {
     
     // Set up path finder buttons
     pathFinder.setupPathFinderButtons();
+
+    courseContent.setupCourseButton();
     
     // --- ADD LISTENER FOR NEW BUTTON ---
     const resetButton = document.getElementById('resetViewBtn');

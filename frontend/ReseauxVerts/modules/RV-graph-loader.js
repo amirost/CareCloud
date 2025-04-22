@@ -258,6 +258,7 @@ export function initGraphLoader(gameState, uiManager) {
             
             // Store minimum consumption if available
             gameState.minimumConsumption = graph.minimumConsumption || null;
+            gameState.courseContent = graph.courseContent || null;
             gameState.loadedGraphId = graph._id;
             
             console.log("Graph loaded with minimum consumption:", gameState.minimumConsumption);

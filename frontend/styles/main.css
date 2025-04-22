@@ -19,6 +19,8 @@
 /* Import utility styles */
 @import url('./utilities/helpers.css');
 @import url('./utilities/responsive.css');
+@import url('./components/course-popup.css');
+@import url('./components/course-editor.css');
 
 /* Default body styles for the entire app */
 body {

@@ -124,6 +124,22 @@ const graphSchema = new mongoose.Schema({
       default: 0
     }
   },
+
+  courseContent:{
+    title:{
+      type : String,
+      default : ''
+    },
+    content:{
+      type:String,
+      default:''
+    },
+    images: [{
+      path: String,
+      caption: String
+    }]
+  },
+  
   createdAt: {
     type: Date,
     default: Date.now

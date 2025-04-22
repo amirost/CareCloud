@@ -103,12 +103,16 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       });
       
+      // Get course content if it exists (from window.cy)
+      const courseContent = window.cy.courseContent || null;
+
       // Create the graph data
       const graphData = {
         name: name || `Graph_${new Date().toISOString().slice(0, 10)}`,
         mode: window.graphEditor.activeMode,
         nodes: nodes,
         edges: edges,
+        courseContent: courseContent,
         antennaSettings: {
           consumptionEnabled: window.graphEditor.antennaSettings.consumptionEnabled,
           consumptionRadiusEnabled: window.graphEditor.antennaSettings.consumptionRadiusEnabled,
@@ -168,6 +172,14 @@ document.addEventListener("DOMContentLoaded", () => {
       
       // Set the active mode
       window.graphEditor.activeMode = graph.mode;
+
+      // Load course content if available - store it on the cy instance
+      if (graph.courseContent) {
+        window.cy.courseContent = graph.courseContent;
+        console.log("Course content loaded:", graph.courseContent);
+      } else {
+        window.cy.courseContent = null;
+      }
       
       // Update antenna settings
       if (graph.antennaSettings) {

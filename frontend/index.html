@@ -35,7 +35,7 @@
                 </div>
                 <div class="mini-game-4">
                     <img src="./Images/Accueil/Regulation_du_trafic_routier_card.png" alt="Traffic Regulation Game" class="game-image">
-                    <button class="game-button" data-game="game4.html">Prochaineùent</button>
+                    <button class="game-button" data-game="game4.html">Prochainement</button>
                 </div>
             </div>
         </div>
@@ -59,6 +59,39 @@
             </div>
 
             <div id="cy" class="cytoscape-container" style="display: none;"></div>
+
+            <div class="course-editor-panel">
+                <div class="course-editor-header">
+                  <h3>Course Content Editor</h3>
+                  <button id="closeCourseEditorBtn" class="close-button">&times;</button>
+                </div>
+                
+                <div class="course-editor-content">
+                  <div class="form-group">
+                    <label for="course-title">Title:</label>
+                    <input type="text" id="course-title" placeholder="Enter course title">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="course-content">Content (HTML supported):</label>
+                    <textarea id="course-content" rows="10" placeholder="Enter course content"></textarea>
+                    <div class="editor-help">
+                      You can use basic HTML tags: &lt;h1&gt;, &lt;h2&gt;, &lt;p&gt;, &lt;b&gt;, &lt;i&gt;, &lt;ul&gt;, &lt;li&gt;, etc.
+                    </div>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label>Images:</label>
+                    <button id="add-image-btn" class="small-button">Add Image</button>
+                    <div id="course-images-container"></div>
+                  </div>
+                  
+                  <div class="form-group">
+                    <button id="previewCourseBtn" class="primary-button">Preview</button>
+                    <button id="saveCourseBtn" class="action-button">Save Changes</button>
+                  </div>
+                </div>
+              </div>
         </div>
     </main>
     

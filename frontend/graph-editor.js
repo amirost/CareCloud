@@ -213,6 +213,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
         ]
     };
+    window.graphEditor.addCourseEditorButton = function() {
+        const editorButtonsContainer = document.querySelector(".editor-buttons");
+        if (!editorButtonsContainer || document.getElementById("courseEditorBtn")) {
+          return; // Container not found or button already exists
+        }
+        
+        const courseEditorBtn = document.createElement("button");
+        courseEditorBtn.id = "courseEditorBtn";
+        courseEditorBtn.className = "dynamic-button";
+        courseEditorBtn.innerHTML = '<i class="fas fa-book"></i> Course Editor';
+        courseEditorBtn.style.backgroundColor = "#9C27B0"; // Purple to distinguish it
+        
+        courseEditorBtn.addEventListener("click", function() {
+          // Check if course editor is initialized
+          if (window.courseEditor) {
+            window.courseEditor.toggleCourseEditor();
+          } else {
+            // Try to initialize it
+            if (typeof window.app !== 'undefined' && window.app.initCourseEditor) {
+              window.app.initCourseEditor();
+              // Delay toggling to allow initialization
+              setTimeout(function() {
+                if (window.courseEditor) window.courseEditor.toggleCourseEditor();
+              }, 100);
+            } else {
+              alert("Course editor not available. Please refresh the page and try again.");
+            }
+          }
+        });
+        
+        editorButtonsContainer.appendChild(courseEditorBtn);
+        console.log("Course editor button added");
+    };
 
     // Function to display mode-specific buttons
     function showModeButtons(mode) {
@@ -246,6 +279,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Ajouter le bouton de capacité globale
         window.graphEditor.addGlobalCapacityButton();
+
+        window.graphEditor.addCourseEditorButton();
     }
 
     // Add event listener for "Create New Level" button

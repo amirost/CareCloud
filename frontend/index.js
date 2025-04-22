@@ -1,18 +1,17 @@
 // index.js - Main application initialization and UI coordination
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Set up main navigation buttons for game selection
   const mainButtons = document.querySelectorAll(".game-button");
 
   mainButtons.forEach(button => {
-      button.addEventListener("click", function () {
-          const gameUrl = this.getAttribute("data-game");
-          if (gameUrl) {
-              window.location.href = gameUrl;
-          }
-      });
+    button.addEventListener("click", function() {
+      const gameUrl = this.getAttribute("data-game");
+      if (gameUrl) {
+        window.location.href = gameUrl;
+      }
     });
-
-
+  });
 
   // Create namespace for application functions
   window.app = window.app || {};
@@ -41,6 +40,43 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Export the fetchGraphs function to be used in other scripts if needed
     window.fetchGraphs = (gameMode) => fetchGraphs(gameMode, elements);
+  };
+
+  // Initialize Course Editor
+  window.app.initCourseEditor = function() {
+    console.log("Initializing course editor");
+    
+    // Load course-editor.js script dynamically if needed
+    if (typeof window.courseEditor === 'undefined') {
+      // First check if we need to load CSS
+      if (!document.querySelector('link[href="styles/components/course-editor.css"]')) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'styles/components/course-editor.css';
+        document.head.appendChild(link);
+        
+        // Also add popup CSS if not present
+        if (!document.querySelector('link[href="styles/components/course-popup.css"]')) {
+          const popupLink = document.createElement('link');
+          popupLink.rel = 'stylesheet';
+          popupLink.href = 'styles/components/course-popup.css';
+          document.head.appendChild(popupLink);
+        }
+      }
+      
+      // Then load the script
+      const script = document.createElement('script');
+      script.src = 'course-editor.js';
+      script.onload = function() {
+        console.log("Course editor script loaded");
+        if (window.courseEditor) {
+          window.courseEditor.init();
+        }
+      };
+      document.head.appendChild(script);
+    } else if (window.courseEditor) {
+      window.courseEditor.init();
+    }
   };
   
   // Function to attach event listeners to UI elements
@@ -84,6 +120,20 @@ document.addEventListener("DOMContentLoaded", () => {
       
       // Keep the button visible - don't hide it
       createNewLevelBtn.style.display = "block";
+      
+      // Initialize Cytoscape if needed
+      if (window.cytoscapeEditor && !window.cytoscapeEditor.isInitialized) {
+        window.cytoscapeEditor.initCytoscape();
+      }
+      
+      // Show cytoscape container
+      cyContainer.style.display = "block";
+      
+      // Initialize course editor
+      window.app.initCourseEditor();
+      
+      // Show buttons for the selected mode
+      showModeButtons(modeSelector.value);
     });
 
     // Return to home
@@ -144,39 +194,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Get mode-specific buttons
         const editorButtonsContainer = document.querySelector(".editor-buttons");
         if (editorButtonsContainer) {
-          const modeButtons = {
-            "RV": [
-              { text: "Ajouter Routeur", action: "ajouter-routeur" },
-              { text: "Ajouter utilisateur", action: "ajouter-utilisateur" },
-              { text: "Ajouter antenne", action: "ajouter-antenne" }
-            ],
-            "SC": [
-              { text: "Ajouter utilisateur", action: "ajouter-utilisateur" },
-              { text: "Ajouter antenne", action: "ajouter-antenne" }
-            ],
-            "Cloud": [
-            ]
-          };
-          
-          // Add buttons for the selected mode
-          if (modeButtons[mode]) {
-            modeButtons[mode].forEach(item => {
-              const button = document.createElement("button");
-              button.className = "dynamic-button";
-              button.textContent = item.text;
-              button.setAttribute("data-action", item.action);
-              editorButtonsContainer.appendChild(button);
-            });
-          }
-          
-          // Add antenna consumption toggle if needed
-          if (mode === "RV" || mode === "SC") {
-            if (window.graphEditor && window.graphEditor.createAntennaConsumptionToggle) {
-              window.graphEditor.createAntennaConsumptionToggle();
-            } else if (typeof createAntennaConsumptionToggle === 'function') {
-              createAntennaConsumptionToggle();
-            }
-          }
+          showModeButtons(mode);
         }
         
         // Update active mode
@@ -268,7 +286,8 @@ document.addEventListener("DOMContentLoaded", () => {
           // Show buttons for this mode
           updateUIForGraphMode(graph.mode);
 
-
+          // Initialize the course editor after loading the graph
+          window.app.initCourseEditor();
         } else {
           console.error(`Failed to load graph: ${result.message}`);
           alert(`Failed to load graph: ${result.message}`);
@@ -295,50 +314,93 @@ document.addEventListener("DOMContentLoaded", () => {
     existingToggles.forEach(toggle => toggle.remove());
     
     // Create mode-specific buttons
+    showModeButtons(mode);
+  }
+  
+  // Store button configurations for each mode
+  const modeButtons = {
+    "RV": [
+      { text: "Ajouter Routeur", action: "ajouter-routeur" },
+      { text: "Ajouter Utilisateur", action: "ajouter-utilisateur" },
+      { text: "Ajouter Antenne", action: "ajouter-antenne" }
+    ],
+    "SC": [
+      { text: "Ajouter Utilisateur", action: "ajouter-utilisateur" },
+      { text: "Ajouter Antenne", action: "ajouter-antenne" }
+    ],
+    "Cloud": [
+    ]
+  };
+
+  // Function to display mode-specific buttons
+  function showModeButtons(mode) {
     const editorButtonsContainer = document.querySelector(".editor-buttons");
     if (!editorButtonsContainer) return;
     
-    // Get button configurations
-    const modeButtons = {
-        "RV": [
-            { text: "Ajouter Routeur", action: "ajouter-routeur" },
-            { text: "Ajouter utilisateur", action: "ajouter-utilisateur" },
-            { text: "Ajouter antenne", action: "ajouter-antenne" }
-        ],
-        "SC": [
-            { text: "Ajouter utilisateur", action: "ajouter-utilisateur" },
-            { text: "Ajouter antenne", action: "ajouter-antenne" }
-        ],
-        "Cloud": [
-        ]
-    };
+    // Remove any existing dynamic buttons
+    const existingButtons = document.querySelectorAll(".dynamic-button");
+    existingButtons.forEach(button => button.remove());
     
-    // Add mode-specific buttons
+    // Remove any existing antenna toggle containers
+    const existingToggles = document.querySelectorAll(".antenna-toggle-container");
+    existingToggles.forEach(toggle => toggle.remove());
+    
+    // Store active mode
+    if (window.graphEditor) {
+      window.graphEditor.activeMode = mode;
+    }
+    
+    // Create and add buttons for the selected mode
     if (modeButtons[mode]) {
-        modeButtons[mode].forEach(item => {
-            const button = document.createElement("button");
-            button.className = "dynamic-button";
-            button.textContent = item.text;
-            button.setAttribute("data-action", item.action);
-            editorButtonsContainer.appendChild(button);
-        });
+      modeButtons[mode].forEach(item => {
+        const button = document.createElement("button");
+        button.className = "dynamic-button";
+        button.textContent = item.text;
+        button.setAttribute("data-action", item.action);
+        
+        editorButtonsContainer.appendChild(button);
+      });
     }
     
-    // Add antenna consumption toggle if in RV or SC mode
-    if (mode === "RV" || mode === "SC") {
-        if (window.graphEditor && window.graphEditor.createAntennaConsumptionToggle) {
-            window.graphEditor.createAntennaConsumptionToggle();
-        } else if (typeof addAntennaToggleIfNeeded === 'function') {
-            addAntennaToggleIfNeeded(mode, editorButtonsContainer);
-        }
-    }
-    
-    if(mode === "RV"){
-      if (window.graphEditor && window.graphEditor.addGlobalCapacityButton) {
-        window.graphEditor.addGlobalCapacityButton();
-    }
+    // Create antenna consumption toggle for RV and SC modes
+    if ((mode === "RV" || mode === "SC") && window.graphEditor && window.graphEditor.createAntennaConsumptionToggle) {
+      window.graphEditor.createAntennaConsumptionToggle();
     }
 
+    // Add the Course Editor button
+    const courseEditorBtn = document.createElement("button");
+    courseEditorBtn.id = "courseEditorBtn";
+    courseEditorBtn.className = "dynamic-button";
+    courseEditorBtn.innerHTML = '<i class="fas fa-book"></i> Course Editor';
+    courseEditorBtn.style.backgroundColor = "#9C27B0"; // Purple to distinguish it
+    
+    courseEditorBtn.addEventListener("click", function() {
+      // Check if course editor is initialized
+      if (window.courseEditor) {
+        window.courseEditor.toggleCourseEditor();
+      } else {
+        // Try to initialize it
+        if (typeof window.app !== 'undefined' && window.app.initCourseEditor) {
+          window.app.initCourseEditor();
+          // Delay toggling to allow initialization
+          setTimeout(function() {
+            if (window.courseEditor) window.courseEditor.toggleCourseEditor();
+          }, 100);
+        } else {
+          alert("Course editor not available. Please refresh the page and try again.");
+        }
+      }
+    });
+    
+    editorButtonsContainer.appendChild(courseEditorBtn);
+
+    // Add the global capacity button for RV mode
+    if (mode === "RV" && window.graphEditor && window.graphEditor.addGlobalCapacityButton) {
+      window.graphEditor.addGlobalCapacityButton();
+    }
+    
+    // Add save button
+    addSaveButton();
   }
   
   // Update selected antenna properties if one is currently selected
@@ -350,6 +412,35 @@ document.addEventListener("DOMContentLoaded", () => {
         !window.cytoscapeEditor.refreshNodeProperties) return;
     
     window.cytoscapeEditor.refreshNodeProperties(window.graphEditor.selectedElement);
+  }
+  
+  // Add a save button to the editor
+  function addSaveButton() {
+    console.log('Adding save button to editor');
+    const editorButtonsContainer = document.querySelector(".editor-buttons");
+    if (editorButtonsContainer && !document.getElementById("saveGraphBtn")) {
+      const saveBtn = document.createElement("button");
+      saveBtn.id = "saveGraphBtn";
+      saveBtn.textContent = "Enregistrer le graphe";
+      saveBtn.addEventListener("click", () => {
+        // Prompt for graph name
+        const name = prompt("Enter a name for this graph:", 
+          `Graph_${window.graphEditor.activeMode}_${new Date().toISOString().slice(0, 10)}`);
+        
+        if (name) {
+          window.graphPersistence.saveGraph(name)
+            .then(result => {
+              if (result.success) {
+                alert(`Graphe "${name}" enregistré avec succès!`);
+              } else {
+                alert(`Échec de l'enregistrement du graphe: ${result.message}`);
+              }
+            });
+        }
+      });
+      
+      editorButtonsContainer.appendChild(saveBtn);
+    }
   }
   
   // Initialize the application

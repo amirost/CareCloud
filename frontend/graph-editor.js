@@ -213,6 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         ]
     };
+    
     window.graphEditor.addCourseEditorButton = function() {
         const editorButtonsContainer = document.querySelector(".editor-buttons");
         if (!editorButtonsContainer || document.getElementById("courseEditorBtn")) {
@@ -225,26 +226,50 @@ document.addEventListener("DOMContentLoaded", () => {
         courseEditorBtn.innerHTML = '<i class="fas fa-book"></i> Course Editor';
         courseEditorBtn.style.backgroundColor = "#9C27B0"; // Purple to distinguish it
         
+        // Add a direct click handler that uses our course-content.js module
         courseEditorBtn.addEventListener("click", function() {
-          // Check if course editor is initialized
-          if (window.courseEditor) {
-            window.courseEditor.toggleCourseEditor();
+          console.log("Course editor button clicked");
+          
+          // If course-content.js hasn't been loaded yet, load it dynamically
+          if (!window.courseEditor) {
+            console.log("Loading course editor script dynamically");
+            
+            // Create script element
+            const script = document.createElement('script');
+            script.src = 'course-content.js';
+            script.type = 'module';
+            
+            // Set onload handler to open editor after loading
+            script.onload = function() {
+              console.log("Course editor script loaded");
+              if (window.courseEditor) {
+                if (!window.courseEditor.isInitialized) {
+                  window.courseEditor.init();
+                }
+                window.courseEditor.toggleCourseEditor();
+              } else {
+                alert("Course editor failed to initialize. Please check console.");
+              }
+            };
+            
+            script.onerror = function() {
+              console.error("Failed to load course editor script");
+              alert("Could not load course editor. Please refresh and try again.");
+            };
+            
+            // Add script to head
+            document.head.appendChild(script);
           } else {
-            // Try to initialize it
-            if (typeof window.app !== 'undefined' && window.app.initCourseEditor) {
-              window.app.initCourseEditor();
-              // Delay toggling to allow initialization
-              setTimeout(function() {
-                if (window.courseEditor) window.courseEditor.toggleCourseEditor();
-              }, 100);
-            } else {
-              alert("Course editor not available. Please refresh the page and try again.");
+            // If already loaded, just toggle it
+            if (!window.courseEditor.isInitialized) {
+              window.courseEditor.init();
             }
+            window.courseEditor.toggleCourseEditor();
           }
         });
         
         editorButtonsContainer.appendChild(courseEditorBtn);
-        console.log("Course editor button added");
+        console.log("Course editor button added with improved handler");
     };
 
     // Function to display mode-specific buttons

@@ -88,3 +88,7 @@ body {
     height: 500px;
   }
 }
+
+.course-editor-panel {
+  display: none; /* Initially hidden */
+}

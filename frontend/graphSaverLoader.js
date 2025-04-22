@@ -104,15 +104,16 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       
       // Get course content if it exists (from window.cy)
-      const courseContent = window.cy.courseContent || null;
-
+      // NOTE: Using a different variable name to avoid conflicts
+      const graphCourseContent = window.cy && window.cy.courseContent ? window.cy.courseContent : null;
+  
       // Create the graph data
       const graphData = {
         name: name || `Graph_${new Date().toISOString().slice(0, 10)}`,
         mode: window.graphEditor.activeMode,
         nodes: nodes,
         edges: edges,
-        courseContent: courseContent,
+        courseContent: graphCourseContent, // Use our safe variable name
         antennaSettings: {
           consumptionEnabled: window.graphEditor.antennaSettings.consumptionEnabled,
           consumptionRadiusEnabled: window.graphEditor.antennaSettings.consumptionRadiusEnabled,
@@ -419,6 +420,34 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
   
+
+  window.graphPersistence.updateCourseContent = async function(graphId, courseContent) {
+    try {
+      // Call the API to update just the course content
+      const response = await fetch(`${API_URL}/${graphId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ courseContent })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log("Course content updated successfully:", result.data);
+        return { success: true, data: result.data };
+      } else {
+        console.error("Failed to update course content:", result.message);
+        return { success: false, message: result.message };
+      }
+    } catch (error) {
+      console.error("Error updating course content:", error);
+      return { success: false, message: error.message };
+    }
+  };
+  
+
   // Add a save button to the editor when it's initialized
   function addSaveButton() {
     console.log('Adding save button to editor');

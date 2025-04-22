@@ -46,36 +46,60 @@ document.addEventListener("DOMContentLoaded", () => {
   window.app.initCourseEditor = function() {
     console.log("Initializing course editor");
     
-    // Load course-editor.js script dynamically if needed
+    // Load course-content.js script dynamically if needed
     if (typeof window.courseEditor === 'undefined') {
-      // First check if we need to load CSS
-      if (!document.querySelector('link[href="styles/components/course-editor.css"]')) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'styles/components/course-editor.css';
-        document.head.appendChild(link);
-        
-        // Also add popup CSS if not present
-        if (!document.querySelector('link[href="styles/components/course-popup.css"]')) {
-          const popupLink = document.createElement('link');
-          popupLink.rel = 'stylesheet';
-          popupLink.href = 'styles/components/course-popup.css';
-          document.head.appendChild(popupLink);
-        }
-      }
+      // First ensure CSS files are loaded
+      const cssFiles = [
+        'styles/components/course-editor.css',
+        'styles/components/course-popup.css'
+      ];
       
-      // Then load the script
-      const script = document.createElement('script');
-      script.src = 'course-editor.js';
-      script.onload = function() {
-        console.log("Course editor script loaded");
-        if (window.courseEditor) {
-          window.courseEditor.init();
+      cssFiles.forEach(cssFile => {
+        if (!document.querySelector(`link[href="${cssFile}"]`)) {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = cssFile;
+          document.head.appendChild(link);
+          console.log(`Loaded CSS: ${cssFile}`);
         }
-      };
-      document.head.appendChild(script);
+      });
+      
+      // Then load the script as a module
+      import('./course-content.js')
+        .then(module => {
+          console.log("Course content module loaded successfully");
+          
+          // The module export will automatically create window.courseEditor
+          if (window.courseEditor) {
+            if (!window.courseEditor.isInitialized) {
+              window.courseEditor.init();
+            }
+            console.log("Course editor initialized from module");
+          } else {
+            console.error("Course editor not available after module load");
+          }
+        })
+        .catch(error => {
+          console.error("Failed to load course content module:", error);
+          
+          // Fallback to traditional script loading
+          const script = document.createElement('script');
+          script.src = 'course-content.js';
+          script.type = 'module';
+          script.onload = function() {
+            console.log("Course editor script loaded via fallback");
+            if (window.courseEditor && !window.courseEditor.isInitialized) {
+              window.courseEditor.init();
+            }
+          };
+          document.head.appendChild(script);
+        });
     } else if (window.courseEditor) {
-      window.courseEditor.init();
+      // If already loaded, just initialize if needed
+      if (!window.courseEditor.isInitialized) {
+        window.courseEditor.init();
+      }
+      console.log("Course editor already available");
     }
   };
   

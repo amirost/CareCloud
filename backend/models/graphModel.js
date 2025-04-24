@@ -150,7 +150,6 @@ const graphSchema = new mongoose.Schema({
   }
 });
 
-// Method to calculate total metrics before save
 graphSchema.pre('save', function(next) {
   
   this.updatedAt = Date.now();
@@ -177,6 +176,13 @@ graphSchema.pre('save', function(next) {
   // Update metrics
   this.metrics.totalCapacity = totalCapacity;
   this.metrics.totalConsumption = totalConsumption;
+  
+  // Ensure course content has default values if missing
+  if (this.courseContent) {
+    if (this.courseContent.title === undefined) this.courseContent.title = '';
+    if (this.courseContent.content === undefined) this.courseContent.content = '';
+    if (!Array.isArray(this.courseContent.images)) this.courseContent.images = [];
+  }
   
   next();
 });

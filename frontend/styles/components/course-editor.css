@@ -350,6 +350,102 @@
   margin: 20px -20px -20px -20px;
 }
 
+.special-tag-btn {
+  background-color: #f0f4ff;
+  border-color: #3a4b83;
+  color: #3a4b83;
+  font-weight: bold;
+}
+
+.special-tag-btn:hover {
+  background-color: #d8e0f7;
+}
+
+/* Styles pour les conteneurs de balises de niveau dans l'éditeur */
+.level-start, .level-end {
+  margin: 15px 0;
+  padding: 15px;
+  border-radius: 8px;
+  position: relative;
+}
+
+.level-start {
+  background-color: #e8f5e9;
+  border: 2px solid #4CAF50;
+}
+
+.level-end {
+  background-color: #fff8e1;
+  border: 2px solid #FFC107;
+}
+
+.level-tag-header {
+  font-weight: bold;
+  font-size: 12px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+  color: #555;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding-bottom: 5px;
+}
+
+.level-start .level-tag-header {
+  color: #2E7D32;
+}
+
+.level-end .level-tag-header {
+  color: #F57F17;
+}
+
+.level-tag-content {
+  min-height: 40px;
+  font-size: 14px;
+}
+
+/* Styles pour l'affichage du contenu dans le popup/preview */
+.course-popup-content .level-start, 
+.course-popup-content .level-end {
+  position: relative;
+  padding: 15px 20px;
+  margin: 20px 0;
+  border-radius: 8px;
+}
+
+.course-popup-content .level-start {
+  background-color: #e8f5e9;
+  border-left: 5px solid #4CAF50;
+}
+
+.course-popup-content .level-end {
+  background-color: #fff8e1;
+  border-left: 5px solid #FFC107;
+}
+
+.course-popup-content .level-start::before {
+  content: "Sera affiché au début du niveau";
+  position: absolute;
+  top: -10px;
+  left: 15px;
+  background-color: #4CAF50;
+  color: white;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.course-popup-content .level-end::before {
+  content: "Sera affiché à la fin du niveau";
+  position: absolute;
+  top: -10px;
+  left: 15px;
+  background-color: #FFC107;
+  color: white;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
 /* Animation */
 @keyframes zoomIn {
   from {

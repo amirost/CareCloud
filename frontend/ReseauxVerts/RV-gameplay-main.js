@@ -162,6 +162,44 @@ async function initializeGame() {
 
     // Load available levels
     graphLoader.fetchRVGraphs();
+
+    function showLevelStartMessage() {
+      if (gameState.courseContentModule && typeof gameState.courseContentModule.showStartContent === 'function') {
+        // Un petit délai pour assurer que tout est chargé correctement
+        setTimeout(() => {
+          gameState.courseContentModule.showStartContent();
+        }, 800);
+      }
+    }
+    
+    // Étendre le graphLoader pour appeler showLevelStartMessage après chargement d'un niveau
+    const originalStartGameplay = graphLoader.startGameplay;
+    graphLoader.startGameplay = function(graphId) {
+      originalStartGameplay.call(this, graphId);
+      
+      // Ajouter un délai pour afficher le message après le chargement
+      setTimeout(showLevelStartMessage, 1000);
+    };
+    
+    // Étendre le solutionValidator pour appeler showEndContent lors de la complétion du niveau
+    if (solutionValidator) {
+      const originalUpdateProgressIndicator = solutionValidator.updateProgressIndicator;
+      solutionValidator.updateProgressIndicator = function() {
+        originalUpdateProgressIndicator.apply(this, arguments);
+        
+        // Vérifier si les conditions de victoire sont remplies
+        if (this.checkWinCondition()) {
+          // Afficher le message de fin de niveau avec un délai
+          setTimeout(() => {
+            if (gameState.courseContentModule && typeof gameState.courseContentModule.showEndContent === 'function') {
+              gameState.courseContentModule.showEndContent();
+            }
+          }, 1500); // Délai après l'animation de victoire
+        }
+      };
+    }
+    
+    console.log("Level message system initialized");
     console.log("Game initialization complete");
    
   } catch (error) {

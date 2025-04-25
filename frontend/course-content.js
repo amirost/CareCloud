@@ -206,6 +206,128 @@ export function initCourseContent(gameState, uiManager) {
     };
   }
   
+  /**
+   * Extraire le contenu spécifique pour le début ou la fin du niveau
+   * @param {string} type - Le type de contenu à extraire ('start' ou 'end')
+   * @returns {string} - Le contenu HTML
+   */
+  function extractLevelContent(type) {
+    if (!gameState || !gameState.courseContent) {
+      return '';
+    }
+
+    const content = gameState.courseContent.content || '';
+    
+    // Créer un DOM temporaire pour analyser le contenu HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = content;
+    
+    // Trouver l'élément de début ou de fin de niveau
+    const levelElement = tempDiv.querySelector(`.level-${type}`);
+    
+    if (!levelElement) {
+      return '';
+    }
+    
+    // Extraire juste le contenu (pas l'en-tête)
+    const contentElement = levelElement.querySelector('.level-tag-content');
+    return contentElement ? contentElement.innerHTML : '';
+  }
+
+  /**
+   * Afficher le contenu de début de niveau
+   */
+  function showStartContent() {
+    const startContent = extractLevelContent('start');
+    if (startContent) {
+      // Créer et afficher une notification ou popup avec ce contenu
+      showLevelMessagePopup('Début du niveau', startContent);
+    }
+  }
+
+  /**
+   * Afficher le contenu de fin de niveau
+   */
+  function showEndContent() {
+    const endContent = extractLevelContent('end');
+    if (endContent) {
+      // Créer et afficher une notification ou popup avec ce contenu
+      showLevelMessagePopup('Niveau terminé', endContent);
+    }
+  }
+
+  /**
+   * Afficher une popup avec un message de niveau
+   * @param {string} title - Le titre de la popup
+   * @param {string} content - Le contenu HTML de la popup
+   */
+  function showLevelMessagePopup(title, content) {
+    // Remove existing popup if any
+    const existingPopup = document.querySelector('.level-message-popup');
+    if (existingPopup) {
+      document.body.removeChild(existingPopup);
+    }
+    
+    // Create popup overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'level-message-popup';
+    
+    // Create popup container
+    const container = document.createElement('div');
+    container.className = 'level-message-container';
+    
+    // Create header
+    const header = document.createElement('div');
+    header.className = 'level-message-header';
+    
+    const titleEl = document.createElement('h3');
+    titleEl.textContent = title;
+    header.appendChild(titleEl);
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'level-message-close';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.addEventListener('click', () => {
+      document.body.removeChild(overlay);
+    });
+    header.appendChild(closeBtn);
+    
+    // Create content
+    const contentEl = document.createElement('div');
+    contentEl.className = 'level-message-content';
+    contentEl.innerHTML = content;
+    
+    // Create footer with continue button
+    const footer = document.createElement('div');
+    footer.className = 'level-message-footer';
+    
+    const continueBtn = document.createElement('button');
+    continueBtn.className = 'primary-button';
+    continueBtn.textContent = 'Continuer';
+    continueBtn.addEventListener('click', () => {
+      document.body.removeChild(overlay);
+    });
+    footer.appendChild(continueBtn);
+    
+    // Assemble popup
+    container.appendChild(header);
+    container.appendChild(contentEl);
+    container.appendChild(footer);
+    overlay.appendChild(container);
+    
+    // Add to document
+    document.body.appendChild(overlay);
+    
+    // Add keyboard event to close on Escape key
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        document.body.removeChild(overlay);
+        document.removeEventListener('keydown', handleKeyDown);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+  }
+  
   // Return public API
   return {
     setupCourseButton,
@@ -217,7 +339,11 @@ export function initCourseContent(gameState, uiManager) {
         coursePopup = null;
         state.isContentVisible = false;
       }
-    }
+    },
+    extractLevelContent,
+    showStartContent,
+    showEndContent,
+    showLevelMessagePopup
   };
 }
 

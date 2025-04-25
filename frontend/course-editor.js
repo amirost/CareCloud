@@ -69,6 +69,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 <button type="button" data-command="createLink" class="toolbar-btn" title="Insert Link">Insérer un lien</button>
                 <button type="button" data-command="unlink" class="toolbar-btn" title="Remove Link">Supprimer le lien</button>
               </div>
+              <div class="toolbar-group">
+                <button type="button" data-command="insertLevelTag" data-value="start" class="toolbar-btn special-tag-btn" title="Contenu de début de niveau">Début niveau</button>
+                <button type="button" data-command="insertLevelTag" data-value="end" class="toolbar-btn special-tag-btn" title="Contenu de fin de niveau">Fin niveau</button>
+              </div>
             </div>
             <div id="rich-text-editor" class="rich-text-editor" contenteditable="true"></div>
           </div>
@@ -279,7 +283,22 @@ document.addEventListener("DOMContentLoaded", () => {
           const command = button.dataset.command;
           const value = button.dataset.value || null;
           
-          if (command === 'createLink') {
+          if (command === 'insertLevelTag') {
+            const tagType = value; // 'start' ou 'end'
+            
+            // Créer un conteneur div avec une classe spéciale
+            const className = tagType === 'start' ? 'level-start' : 'level-end';
+            const labelText = tagType === 'start' ? 'CONTENU DÉBUT DE NIVEAU' : 'CONTENU FIN DE NIVEAU';
+            
+            // Insérer un bloc HTML formaté
+            const html = `<div class="${className}">
+              <div class="level-tag-header">${labelText}</div>
+              <div class="level-tag-content" contenteditable="true">Écrivez ici le contenu à afficher en ${tagType === 'start' ? 'début' : 'fin'} de niveau...</div>
+            </div><p></p>`;
+            
+            // Insérer à la position du curseur
+            document.execCommand('insertHTML', false, html);
+          } else if (command === 'createLink') {
             const url = prompt('Enter the link URL:');
             if (url) document.execCommand(command, false, url);
           } else {

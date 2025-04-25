@@ -57,8 +57,6 @@
 .editor-container {
   display: flex;
   flex-direction: column;
-  /*border: 1px solid #ddd;*/
-  border-radius: 4px;
   overflow: hidden;
   margin-bottom: 20px;
 }

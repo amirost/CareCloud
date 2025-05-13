@@ -117,7 +117,6 @@ async function initializeGame() {
 
     courseContent.setupCourseButton();
     
-    // --- ADD LISTENER FOR NEW BUTTON ---
     const resetButton = document.getElementById('resetViewBtn');
     if (resetButton) {
       resetButton.addEventListener('click', () => {

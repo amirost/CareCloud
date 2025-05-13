@@ -73,6 +73,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 <button type="button" data-command="insertLevelTag" data-value="start" class="toolbar-btn special-tag-btn" title="Contenu de début de niveau">Début niveau</button>
                 <button type="button" data-command="insertLevelTag" data-value="end" class="toolbar-btn special-tag-btn" title="Contenu de fin de niveau">Fin niveau</button>
               </div>
+              <div class="toolbar-group">
+              <button type="button" class="toolbar-btn insert-image-btn" title="Insérer une image">
+                <i class="fas fa-image"></i>
+              </button>
+               </div>
             </div>
             <div id="rich-text-editor" class="rich-text-editor" contenteditable="true"></div>
           </div>
@@ -92,43 +97,23 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
       
       // Image modal HTML
-      const imageModal = document.createElement('div');
-      imageModal.id = 'image-modal';
-      imageModal.className = 'image-modal';
-      imageModal.innerHTML = `
-        <div class="image-modal-content">
-          <div class="modal-header">
-            <h3>Add Image</h3>
-            <button class="close-modal-btn">&times;</button>
-          </div>
-          <div class="modal-body">
-            <div class="form-group">
-              <label for="image-url">Image URL:</label>
-              <input type="text" id="image-url" placeholder="https://example.com/image.jpg">
-            </div>
-            <div class="form-group">
-              <label for="image-caption">Caption (optional):</label>
-              <input type="text" id="image-caption" placeholder="Image description">
-            </div>
-            <div class="form-group">
-              <label>Alignment:</label>
-              <div class="alignment-buttons">
-                <button type="button" data-align="left" class="align-btn active"><i class="fas fa-align-left"></i></button>
-                <button type="button" data-align="center" class="align-btn"><i class="fas fa-align-center"></i></button>
-                <button type="button" data-align="right" class="align-btn"><i class="fas fa-align-right"></i></button>
-              </div>
-            </div>
-            <div class="image-preview-container">
-              <p class="preview-placeholder">Image preview will appear here</p>
-              <img id="image-preview" class="image-preview" style="display: none;">
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button class="secondary-button cancel-image-btn">Cancel</button>
-            <button class="action-button confirm-image-btn">Add Image</button>
-          </div>
-        </div>
-      `;
+  const imageModal = document.createElement('div');
+  imageModal.id = 'image-insert-modal';
+  imageModal.className = 'image-insert-modal';
+  imageModal.style.display = 'none';
+  imageModal.innerHTML = `
+    <div class="image-insert-modal-content">
+      <div class="modal-header">
+        <span class="close-image-modal">&times;</span>
+        <h4>Insérer une image</h4>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="image-url-input" placeholder="URL de l'image" style="width: 100%; padding: 6px; margin-bottom: 8px;">
+        <input type="text" id="image-alt-input" placeholder="Texte alternatif (optionnel)" style="width: 100%; padding: 6px;">
+        <button id="confirm-image-insert" class="action-button" style="margin-top:10px;">Insérer</button>
+      </div>
+    </div>
+  `;
       
       // Add to document body
       document.body.appendChild(editorPanel);
@@ -219,7 +204,30 @@ document.addEventListener("DOMContentLoaded", () => {
       
       const confirmImageBtn = imageModal.querySelector('.confirm-image-btn');
       if (confirmImageBtn) {
-        confirmImageBtn.addEventListener('click', () => this.addOrUpdateImage());
+        confirmImageBtn.addEventListener('click', () => {
+          const urlInput = imageModal.querySelector('#image-url');
+          const captionInput = imageModal.querySelector('#image-caption');
+          
+          const imageUrl = urlInput.value.trim();
+          if (!imageUrl) {
+            alert('Veuillez saisir une URL pour l’image.');
+            return;
+          }
+
+          const alignBtn = imageModal.querySelector('.align-btn.active');
+          const alignment = alignBtn ? alignBtn.dataset.align : 'left';
+
+          this.images.push({
+            path: imageUrl,
+            caption: captionInput.value.trim(),
+            align: alignment
+          });
+
+          this.refreshImageGallery();
+          this.closeImageModal(); // Ensure modal closes properly
+          
+          this.isDirty = true;
+        });
       }
       
       // Image URL input for preview
@@ -271,46 +279,128 @@ document.addEventListener("DOMContentLoaded", () => {
     },
     
     // Setup rich text editor functionality
-    setupRichTextEditor: function() {
-      const toolbarButtons = document.querySelectorAll('.toolbar-btn');
-      const editor = document.getElementById('rich-text-editor');
-      
-      if (!toolbarButtons.length || !editor) return;
-      
-      // Add event listeners to toolbar buttons
-      toolbarButtons.forEach(button => {
-        button.addEventListener('click', () => {
-          const command = button.dataset.command;
-          const value = button.dataset.value || null;
-          
-          if (command === 'insertLevelTag') {
-            const tagType = value; // 'start' ou 'end'
-            
-            // Créer un conteneur div avec une classe spéciale
-            const className = tagType === 'start' ? 'level-start' : 'level-end';
-            const labelText = tagType === 'start' ? 'CONTENU DÉBUT DE NIVEAU' : 'CONTENU FIN DE NIVEAU';
-            
-            // Insérer un bloc HTML formaté
-            const html = `<div class="${className}">
-              <div class="level-tag-header">${labelText}</div>
-              <div class="level-tag-content" contenteditable="true">Écrivez ici le contenu à afficher en ${tagType === 'start' ? 'début' : 'fin'} de niveau...</div>
-            </div><p></p>`;
-            
-            // Insérer à la position du curseur
-            document.execCommand('insertHTML', false, html);
-          } else if (command === 'createLink') {
-            const url = prompt('Enter the link URL:');
-            if (url) document.execCommand(command, false, url);
-          } else {
-            document.execCommand(command, false, value);
-          }
-          
-          // Focus back to editor
-          editor.focus();
-          this.isDirty = true;
+      setupRichTextEditor: function() {
+        const toolbarButtons = document.querySelectorAll('.toolbar-btn');
+        const editor = document.getElementById('rich-text-editor');
+
+        if (!toolbarButtons.length || !editor) return;
+
+        toolbarButtons.forEach(button => {
+          button.addEventListener('click', () => {
+            const command = button.dataset.command;
+            const value = button.dataset.value || null;
+
+            if (command === 'insertLevelTag') {
+              const tagType = value;
+              const className = tagType === 'start' ? 'level-start' : 'level-end';
+              const labelText = tagType === 'start' ? 'CONTENU DÉBUT DE NIVEAU' : 'CONTENU FIN DE NIVEAU';
+
+              const html = `
+                <div class="${className}">
+                  <div class="level-tag-header">${labelText}</div>
+                  <div class="level-tag-content" contenteditable="true">Écrivez ici le contenu à afficher en ${tagType === 'start' ? 'début' : 'fin'} de niveau...</div>
+                  <div contenteditable="false">
+                    <button class="level-tag-done-btn">Terminé</button>
+                  </div>
+                </div>
+                <p><br></p>
+              `;
+
+              document.execCommand('insertHTML', false, html);
+            } else if (command === 'createLink') {
+              const url = prompt('Enter the link URL:');
+              if (url) document.execCommand(command, false, url);
+            } else {
+              document.execCommand(command, false, value);
+            }
+
+            editor.focus();
+            this.isDirty = true;
+          });
         });
-      });
-    },
+
+        // Toggle edit mode for level content
+        editor.addEventListener('click', (e) => {
+          const button = e.target.closest('.level-tag-done-btn');
+          if (button) {
+            const contentDiv = button.parentElement.previousElementSibling;
+            if (contentDiv) {
+              const isEditable = contentDiv.getAttribute('contenteditable') === 'true';
+              contentDiv.setAttribute('contenteditable', (!isEditable).toString());
+              button.textContent = isEditable ? 'Éditer' : 'Terminé';
+              button.classList.toggle('edit-mode', !isEditable);
+
+              if (!isEditable) contentDiv.focus();
+              else contentDiv.blur();
+            }
+          }
+        });
+
+        // Image insertion modal handling
+        const insertImageBtn = document.querySelector('.insert-image-btn');
+        const imageModal = document.getElementById('image-insert-modal');
+        const closeImageModal = document.querySelector('.close-image-modal');
+        const confirmImageInsert = document.getElementById('confirm-image-insert');
+        const imageUrlInput = document.getElementById('image-url-input');
+        const imageAltInput = document.getElementById('image-alt-input');
+
+        function insertHtmlAtCursor(html) {
+          const sel = window.getSelection();
+          if (sel.getRangeAt && sel.rangeCount) {
+            const range = sel.getRangeAt(0);
+            range.deleteContents();
+
+            const el = document.createElement("div");
+            el.innerHTML = html;
+            const frag = document.createDocumentFragment(), node = el.firstChild;
+            let lastNode;
+
+            while ((node)) {
+              lastNode = frag.appendChild(node);
+            }
+
+            range.insertNode(frag);
+
+            if (lastNode) {
+              range.setStartAfter(lastNode);
+              range.setEndAfter(lastNode);
+              sel.removeAllRanges();
+              sel.addRange(range);
+            }
+          }
+        }
+
+        insertImageBtn.addEventListener('click', () => {
+          imageUrlInput.value = '';
+          imageAltInput.value = '';
+          imageModal.style.display = 'block';
+          imageUrlInput.focus();
+        });
+
+        function closeModal() {
+          imageModal.style.display = 'none';
+        }
+
+        closeImageModal.onclick = closeModal;
+
+        window.onclick = function(event) {
+          if (event.target == imageModal) closeModal();
+        };
+
+        confirmImageInsert.addEventListener('click', () => {
+          const imageUrl = imageUrlInput.value.trim();
+          const imageAlt = imageAltInput.value.trim() || '';
+
+          if (imageUrl) {
+            const imageHtml = `<img src="${imageUrl}" alt="${imageAlt}" style="max-width:100%; height:auto;">`;
+            insertHtmlAtCursor(imageHtml);
+            closeModal();
+          } else {
+            alert("Veuillez fournir l'URL de l'image.");
+            imageUrlInput.focus();
+          }
+        });
+      },
     
     // Toggle course editor visibility
     toggleCourseEditor: function() {
@@ -378,7 +468,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const modal = document.getElementById('image-modal');
       modal.style.display = 'none';
       this.currentEditingImageIndex = -1;
+
+      // Clear inputs
+      modal.querySelector('#image-url').value = '';
+      modal.querySelector('#image-caption').value = '';
+
+      const preview = modal.querySelector('#image-preview');
+      const placeholder = modal.querySelector('.preview-placeholder');
+      preview.src = '';
+      preview.style.display = 'none';
+      placeholder.style.display = 'block';
+      placeholder.textContent = 'Image preview will appear here';
     },
+
     
     // Update image preview in the modal
     updateImagePreview: function() {
@@ -386,30 +488,29 @@ document.addEventListener("DOMContentLoaded", () => {
       const urlInput = modal.querySelector('#image-url');
       const preview = modal.querySelector('#image-preview');
       const placeholder = modal.querySelector('.preview-placeholder');
-      
-      if (urlInput.value.trim()) {
-        preview.src = urlInput.value;
-        preview.style.display = 'block';
-        placeholder.style.display = 'none';
-        
-        // Handle image load error
+
+      const url = urlInput.value.trim();
+      if (url) {
+        preview.onload = () => {
+          preview.style.display = 'block';
+          placeholder.style.display = 'none';
+        };
+
         preview.onerror = () => {
           preview.style.display = 'none';
           placeholder.style.display = 'block';
           placeholder.textContent = 'Error loading image. Please check the URL.';
         };
-        
-        // Handle image load success
-        preview.onload = () => {
-          preview.style.display = 'block';
-          placeholder.style.display = 'none';
-        };
+
+        preview.src = url;
       } else {
+        preview.src = '';
         preview.style.display = 'none';
         placeholder.style.display = 'block';
         placeholder.textContent = 'Image preview will appear here';
       }
     },
+
     
     // Add or update an image based on the modal form
     addOrUpdateImage: function() {

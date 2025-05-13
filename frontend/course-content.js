@@ -95,7 +95,23 @@ export function initCourseContent(gameState, uiManager) {
     if (!courseContent.content || !courseContent.content.trim()) {
       content.innerHTML = '<p><em>No content available for this course.</em></p>';
     } else {
-      content.innerHTML = courseContent.content;
+      // Parse HTML and remove level-specific sections
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = courseContent.content;
+  
+      // Remove level-start and level-end sections
+      const levelStartSections = tempDiv.querySelectorAll('.level-start');
+      const levelEndSections = tempDiv.querySelectorAll('.level-end');
+  
+      levelStartSections.forEach(el => el.remove());
+      levelEndSections.forEach(el => el.remove());
+  
+      // Set cleaned content
+      content.innerHTML = tempDiv.innerHTML.trim();
+  
+      if (!content.innerHTML.trim()) {
+        content.innerHTML = '<p><em>No content available for this course.</em></p>';
+      }
     }
     
     // Add images if available
@@ -239,6 +255,7 @@ export function initCourseContent(gameState, uiManager) {
    */
   function showStartContent() {
     const startContent = extractLevelContent('start');
+    console.log("show start content");
     if (startContent) {
       // Créer et afficher une notification ou popup avec ce contenu
       showLevelMessagePopup('Début du niveau', startContent);

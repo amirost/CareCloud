@@ -166,6 +166,22 @@
   background-color: var(--color-primary);
 }
 
+.level-tag-done-btn {
+  margin-top: 8px;
+  padding: 5px 10px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.level-tag-done-btn:hover {
+  background-color: #45a049;
+}
+
+
+
 /* Responsive adjustments */
 @media (max-width: 1200px) {
   #cy.cytoscape-container {

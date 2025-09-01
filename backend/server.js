@@ -1,17 +1,19 @@
+// server.js
+
 require('dotenv/config');
 
 const express = require('express');
 const cors = require('cors'); 
-const os = require('os'); // Add this for network interface information
+const os = require('os');
 const { connectDatabase } = require('../database');
 const {
     createGraph,
     getAllGraphs,
     getGraphById,
+    findGraphByName, // ** IMPORT DE LA NOUVELLE FONCTION **
     updateGraph,
     deleteGraph,
-    updateMinimumConsumption 
-} = require('./crud'); // Import des fonctions CRUD
+} = require('./crud');
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -23,11 +25,9 @@ app.use(cors());
 
 // Add a new route to get server information
 app.get('/api/serverinfo', (req, res) => {
-    // Get all network interfaces
     const networkInterfaces = os.networkInterfaces();
     let ipAddress = null;
     
-    // Find the first non-internal IPv4 address
     Object.keys(networkInterfaces).forEach((interfaceName) => {
         networkInterfaces[interfaceName].forEach((iface) => {
             if (iface.family === 'IPv4' && !iface.internal) {
@@ -44,12 +44,13 @@ app.get('/api/serverinfo', (req, res) => {
 });
 
 // Routes API
-app.post('/api/graphs', createGraph);      // Créer un graphe
-app.get('/api/graphs', getAllGraphs);      // Récupérer tous les graphes
-app.get('/api/graphs/:id', getGraphById);  // Récupérer un graphe par ID
-app.put('/api/graphs/:id', updateGraph);   // Mettre à jour un graphe
-app.delete('/api/graphs/:id', deleteGraph);// Supprimer un graphe
-app.patch('/api/graphs/:id/minimumConsumption', updateMinimumConsumption);
+app.post('/api/graphs', createGraph);
+app.get('/api/graphs', getAllGraphs);
+app.get('/api/graphs/find', findGraphByName); // ** AJOUT DE LA NOUVELLE ROUTE **
+app.get('/api/graphs/:id', getGraphById);
+app.put('/api/graphs/:id', updateGraph);
+app.delete('/api/graphs/:id', deleteGraph);
+app.patch('/api/graphs/:id', updateGraph);
 
 // Test de connexion
 app.get('/', (req, res) => {
@@ -63,7 +64,6 @@ app.get('/', (req, res) => {
 
 // Lancer le serveur
 app.listen(port, '0.0.0.0', () => {
-    // Get server's IP addresses for easier connection
     const networkInterfaces = os.networkInterfaces();
     const addresses = [];
     

@@ -19,7 +19,18 @@
     transition: all 0.2s ease;
     border-left: 3px solid transparent;
   }
-  
+  /* Quand une paire est connectée, on change son fond */
+  .user-pair-item.is-connected {
+    background-color: rgba(255, 255, 255, 0.9); /* Fond presque blanc */
+    color: #333; /* Texte sombre pour la lisibilité */
+  }
+  /* On doit aussi ajuster la couleur du texte des enfants */
+  .user-pair-item.is-connected .pair-info {
+    color: #333;
+  }
+  .user-pair-item.is-connected .pair-status.connected {
+    color: #2E7D32; /* Un vert plus foncé pour contraster sur le blanc */
+  }
   .user-pair-item:hover {
     background-color: rgba(255, 255, 255, 0.12);
     transform: translateY(-2px);

@@ -1,84 +1,94 @@
-/* Tool buttons styling */
+/* tool-buttons.css */
+
+.tools-panel {
+  /* Ce conteneur existe dans les deux jeux */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  background-color: var(--color-bg-panel);
+  padding: var(--space-sm);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-md);
+}
+
 .tool-button {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    width: 100%;
-    padding: 10px 12px;
-    background-color: var(--color-bg-panel);
-    color: var(--color-text-light);
-    border: none;
-    border-radius: var(--border-radius-sm);
-    margin-bottom: 8px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    box-shadow: var(--shadow-sm);
+  /* Style de base unifié pour TOUS les boutons d'outils */
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Aligner le contenu à gauche */
+  width: 100%;
+  padding: 10px 12px;
+  background-color: var(--color-primary); /* Couleur de base comme RV */
+  color: var(--color-text-light);
+  border: none;
+  border-radius: var(--border-radius-sm);
+  margin-bottom: 0; /* Géré par le 'gap' du parent */
+  font-size: 14px;
+  font-weight: 500; /* Un peu plus gras */
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+  text-align: left; /* Assurer l'alignement à gauche */
+}
+
+.tool-button i {
+  margin-right: 10px;
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0; /* Empêche l'icône de se rétrécir */
+}
+
+.tool-button:hover {
+  background-color: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.tool-button:active {
+  transform: translateY(0);
+  background-color: var(--color-accent);
+  color: var(--color-primary-dark);
+}
+
+/* Styles spécifiques pour certains boutons (optionnel mais recommandé) */
+/* Ces couleurs permettent de différencier les actions */
+#resetViewBtn,
+#showCourseBtn {
+  background-color: var(--color-primary);
+}
+
+#findAllPathsBtn, 
+#applyGreedyBtn {
+  background-color: var(--color-secondary);
+}
+
+#findNextPathBtn {
+  background-color: #3949AB; /* Indigo */
+}
+
+#applyOptimalBtn {
+  background-color: #F57C00; /* Orange */
+}
+
+/* Responsive */
+@media (max-width: 991.98px) {
+  .tools-panel {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
   }
-  
-  .tool-button i {
-    margin-right: 10px;
-    font-size: 16px;
-    width: 20px;
-    text-align: center;
+  .tool-button {
+    flex: 1 1 150px; /* Permet aux boutons de s'adapter en largeur */
+    justify-content: center; /* Centrer le contenu sur tablette */
   }
-  
-  .tool-button:hover {
-    background-color: var(--color-primary);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+}
+
+@media (max-width: 576px) {
+  .tools-panel {
+    flex-direction: column; /* Revenir à la colonne sur mobile */
   }
-  
-  .tool-button:active {
-    transform: translateY(0);
+  .tool-button {
+    justify-content: flex-start; /* Revenir à l'alignement gauche */
   }
-  
-  /* Specific button styles */
-  #resetViewBtn {
-    background-color: var(--color-primary);
-  }
-  
-  #findAllPathsBtn {
-    background-color: var(--color-secondary);
-  }
-  
-  #findNextPathBtn {
-    background-color: #3949AB; /* Indigo color */
-  }
-  
-  #applyOptimalBtn {
-    background-color: #F57C00; /* Orange color */
-  }
-  
-  /* Responsive styling for smaller screens */
-  @media (max-width: 768px) {
-    .tool-button {
-      padding: 8px 10px;
-      font-size: 12px;
-    }
-    
-    .tool-button i {
-      font-size: 14px;
-      margin-right: 8px;
-    }
-    
-    .tools-panel {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
-    
-    .tool-button {
-      margin-bottom: 0;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    .tools-panel {
-      grid-template-columns: 1fr;
-    }
-    
-    .tool-button {
-      margin-bottom: 6px;
-    }
-  }
+}

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetStack Operator - Colonnes</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <h1>Bin packing</h1>
+            <nav id="level-selector"></nav>
+        </header>
+        <main id="main-content">
+            <div id="info-panel">
+                <div class="info-block">
+                    <h2 id="level-title"></h2>
+                    <button id="info-btn" class="hidden">i</button>
+                    <p id="level-objective"></p>
+                </div>
+                <div class="info-line" id="energy-meter">
+                    <span>Consommation:</span>
+                    <div class="gauge"><div class="gauge-fill" id="energy-gauge-fill"></div></div>
+                    <strong id="current-energy">0W</strong> / <span id="max-energy">100W</span>
+                </div>
+                 <div class="info-block" id="execution-info" style="display: none;">
+                    <div class="info-line" id="execution-counter">
+                        <span>Exécutions:</span>
+                        <strong id="current-executions">0</strong> / <span id="max-executions">8</span>
+                    </div>
+                    <div class="info-line" id="placements-counter">
+                        <span>Placements ce tour:</span>
+                        <strong id="current-placements">0</strong> / <span>3</span>
+                    </div>
+                </div>
+            </div>
+            <div id="game-body">
+                <aside id="sidebar">
+                    <div id="task-queue-container">
+                        <h2>File d'attente des Tâches</h2>
+                        <div id="task-queue"></div>
+                    </div>
+                     <div id="controls">
+                        <div id="algorithm-mode-switch" class="switch-container" style="display: none;">
+                            <label class="switch">
+                                <input type="checkbox" id="mode-toggle" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <span>Mode Guidé</span>
+                        </div>
+                        <!-- MODIFICATION : Ajout du nouveau switch -->
+                        <div class="switch-container">
+                            <label class="switch">
+                                <input type="checkbox" id="exec-consumption-toggle">
+                                <span class="slider"></span>
+                            </label>
+                            <span>Simuler conso. d'exécution</span>
+                        </div>
+                        <button id="execute-btn" style="display: none;">Lancer l'Exécution</button>
+                        <button id="reset-btn">Recommencer le niveau</button>
+                    </div>
+                </aside>
+                <div id="servers-area"></div>
+            </div>
+        </main>
+        
+        <div id="modal-overlay" class="modal-overlay hidden">
+            <div id="modal-content">
+                <h2 id="modal-title"></h2>
+                <p id="modal-message"></p>
+                <button id="modal-next-btn">Niveau Suivant</button>
+                <button id="modal-retry-btn">Recommencer</button>
+            </div>
+        </div>
+
+        <div id="info-modal-overlay" class="modal-overlay hidden">
+            <div id="info-modal-content">
+                <button id="info-modal-close-btn">&times;</button>
+                <h2 id="info-modal-title"></h2>
+                <p id="info-modal-text"></p>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

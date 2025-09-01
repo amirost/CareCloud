@@ -15,9 +15,11 @@ export function initSolutionValidator(gameState, uiManager) {
     
     handleSaveSolution() {
       const currentConsumption = this.getCurrentConsumption();
+      const currentPaths = gameState.completedPaths || [];
+
       uiManager.showSolutionSaveDialog(currentConsumption, (confirmed) => {
         if (confirmed) {
-          this.saveMinimumConsumption(gameState.loadedGraphId, currentConsumption);
+          this.saveOptimalSolution(gameState.loadedGraphId, currentConsumption, currentPaths);
         }
       });
     },
@@ -37,27 +39,43 @@ export function initSolutionValidator(gameState, uiManager) {
       return totalConsumption;
     },
     
-    async saveMinimumConsumption(graphId, minimumConsumption) {
+async saveOptimalSolution(graphId, minimumConsumption, optimalPathSolution) {
+      if (!graphId) {
+        console.error('Cannot save solution: No graph ID loaded.');
+        uiManager.showNotification('Error: No level ID found!', 'error');
+        return;
+      }
+
       try {
-        const response = await fetch(`${gameState.API_URL}/${graphId}/minimumConsumption`, {
-          method: 'PATCH',
+        console.log(`Saving optimal solution for graph ${graphId}...`);
+        
+        // ---- LA CORRECTION EST ICI ----
+        // On utilise l'endpoint général du graphe, pas le sous-endpoint.
+        const response = await fetch(`${gameState.API_URL}/${graphId}`, { // Changé de `${gameState.API_URL}/${graphId}/minimumConsumption`
+          method: 'PATCH', // PATCH est parfait pour une mise à jour partielle.
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ minimumConsumption })
+          // Le body contient les champs à mettre à jour.
+          body: JSON.stringify({ 
+            minimumConsumption, 
+            optimalPathSolution 
+          })
         });
         
         const result = await response.json();
         
-        if (result.success) {
-          console.log('Solution saved successfully');
-          // Update local game state
-          gameState.minimumConsumption = minimumConsumption;
-          // Show success message
+        if (response.ok && result.success) {
+          console.log('Solution saved successfully:', result.data);
+          
+          // Mettre à jour l'état local avec les nouvelles données renvoyées par le serveur
+          gameState.minimumConsumption = result.data.minimumConsumption;
+          gameState.optimalPathSolution = result.data.optimalPathSolution;
+          
           uiManager.showNotification('Solution saved successfully!');
         } else {
-          console.error('Failed to save solution:', result.message);
-          uiManager.showNotification('Failed to save solution!', 'error');
+          console.error('Failed to save solution:', result.message || 'Unknown error');
+          uiManager.showNotification(`Failed to save solution: ${result.message || 'Check console.'}`, 'error');
         }
       } catch (error) {
         console.error('Error saving solution:', error);
@@ -94,7 +112,7 @@ export function initSolutionValidator(gameState, uiManager) {
       uiManager.updateEnergySavingsGauge(currentConsumption, maxConsumption);
       
       // Check win condition
-      if (this.checkWinCondition()) {
+      if (this.checkWinCondition() && !gameState.applyingSolution) {
           uiManager.showLevelCompleteMessage();
       }
   }

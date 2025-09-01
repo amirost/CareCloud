@@ -1,4 +1,5 @@
 // RV-graph-loader.js - Handles fetching and loading graph data
+import { initCytoscape } from './RV-cytoscape-init.js';
 
 export function initGraphLoader(gameState, uiManager) {
     return {
@@ -59,19 +60,27 @@ export function initGraphLoader(gameState, uiManager) {
         },
         
         // Start gameplay with the selected graph
-        startGameplay(graphId) {
+        async startGameplay(graphId) {
             console.log(`Starting gameplay with graph ID: ${graphId}`);
-            
+            gameState.reset();
+            uiManager.updateStats();
+
             // Switch to gameplay view
             uiManager.showGameplay();
             
             // Reset game state
             gameState.reset();
             
-            // Set window.cy to make it accessible to graphSaverLoader.js if needed
-            window.cy = gameState.cy;
+            // Re-initialize Cytoscape because it was destroyed
+            await initCytoscape(gameState, { attachToWindow: true });
+
+            if (!gameState.cy) {
+                console.error("Failed to re-initialize Cytoscape. Aborting.");
+                alert("Erreur critique: Impossible de démarrer le moteur du jeu.");
+                return;
+            }
             
-            // Load the graph
+            // Load the graph into the new instance
             this.loadGraph(graphId);
         },
         
@@ -258,6 +267,7 @@ export function initGraphLoader(gameState, uiManager) {
             
             // Store minimum consumption if available
             gameState.minimumConsumption = graph.minimumConsumption || null;
+            gameState.optimalPathSolution = graph.optimalPathSolution || []; 
             gameState.courseContent = graph.courseContent || null;
             gameState.loadedGraphId = graph._id;
             
@@ -289,60 +299,25 @@ export function initGraphLoader(gameState, uiManager) {
             
             // Update stats
             uiManager.updateStats();
+
+            // >>>>>>>>>>>>>>>>>>>>>>>>>>> LA CORRECTION EST ICI <<<<<<<<<<<<<<<<<<<<<<<<<<<
+            // RE-ATTACH EVENT HANDLERS to the new Cytoscape instance. This is critical.
+            if (gameState.eventHandlers && gameState.gamePhases) {
+                console.log("Re-attaching event handlers to the new Cytoscape instance.");
+                gameState.eventHandlers.setupEventHandlers(gameState.gamePhases);
+            } else {
+                console.error("Cannot re-attach event handlers: eventHandlers or gamePhases missing from gameState.");
+            }
+            // >>>>>>>>>>>>>>>>>>>>>>>>>>> FIN DE LA CORRECTION <<<<<<<<<<<<<<<<<<<<<<<<<<<
             
-            // Start the game with Phase 1 - Use a safer approach
+            // Start the game with Phase 1
             try {
-                // If we already have game phases properly initialized, use that
                 if (gameState.gamePhases && typeof gameState.gamePhases.startPhase1 === 'function') {
-                    console.log("Using existing game phases");
+                    console.log("Using existing game phases to start Phase 1");
                     gameState.gamePhases.startPhase1();
                 } else {
-                    // Fallback: Import game phases module again (should be avoided if possible)
-                    console.log("Game phases not found in game state, importing again");
-                    import('./RV-game-phases.js').then(({ initGamePhases }) => {
-                        // Use temporary event handlers if needed
-                        const tempEventHandlers = {
-                            highlightAvailableAntennas: () => {
-                                const userNode = gameState.cy.getElementById(gameState.selectedUser);
-                                if (!userNode) return;
-                                
-                                const userPos = userNode.position();
-                                gameState.cy.nodes('[type="antenna"]').forEach(antenna => {
-                                    const antennaPos = antenna.position();
-                                    const radius = antenna.data('radius') || 50;
-                                    const distance = Math.sqrt(
-                                        Math.pow(userPos.x - antennaPos.x, 2) + 
-                                        Math.pow(userPos.y - antennaPos.y, 2)
-                                    );
-                                    if (distance <= radius) {
-                                        antenna.addClass('available');
-                                    }
-                                });
-                            },
-                            highlightNextHops: () => {
-                                // Simplified version
-                                if (!gameState.currentPath || !gameState.currentPath.current) return;
-                                
-                                const currentNode = gameState.cy.getElementById(gameState.currentPath.current);
-                                if (!currentNode) return;
-                                
-                                currentNode.connectedEdges().forEach(edge => {
-                                    const otherNode = edge.source().id() === gameState.currentPath.current ? 
-                                        edge.target() : edge.source();
-                                    
-                                    if (otherNode.data('type') === 'router' && 
-                                        !gameState.currentPath.route.includes(otherNode.id())) {
-                                        otherNode.addClass('available');
-                                    }
-                                });
-                            }
-                        };
-                        
-                        const tempGamePhases = initGamePhases(gameState, uiManager, tempEventHandlers);
-                        tempGamePhases.startPhase1();
-                    }).catch(err => {
-                        console.error("Error initializing game phases:", err);
-                    });
+                    console.error("Critical error: gamePhases not found on gameState, cannot start the game.");
+                    alert("Erreur critique: Impossible de démarrer la logique du jeu.");
                 }
             } catch (error) {
                 console.error("Error starting game phases:", error);

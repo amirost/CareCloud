@@ -1,9 +1,4 @@
-// SC-styles.js - Unified styling system for Set Cover gameplay
 
-/**
- * Creates and returns all styles needed for the Set Cover game
- * Combines base styles and gameplay-specific styles in a single module
- */
 export function createSCStyles() {
     // Base styles for core elements
     const baseStyles = [
@@ -17,7 +12,7 @@ export function createSCStyles() {
           'text-outline-color': '#222',
           'text-outline-width': 1,
           'font-size': 12,
-          'text-valign': 'center',
+          'text-valign': 'bottom',
           'text-halign': 'center',
           'width': 40,
           'height': 40,
@@ -48,29 +43,39 @@ export function createSCStyles() {
       {
         selector: 'node[type="user"]',
         style: {
-          'background-image': '../../../icons/user_icon.png',
-          'shape': 'ellipse',
+          'background-image': '../../../icons/user_icon_white.png',
+          
+          'shape': function(ele) {
+              // Si le nœud n'a pas encore de forme assignée, on lui en donne une.
+              if (!ele.scratch('_shape')) {
+                  ele.scratch('_shape', getRandomShape());
+              }
+              // On retourne la forme stockée pour que le style reste constant lors des redessins.
+              return ele.scratch('_shape');
+          },
+          
           'background-fit': 'cover',
           'background-position-x': '50%',
           'background-position-y': '50%',
           'background-width': '60%',
           'background-height': '60%',
           'background-opacity': 1,
-          'background-clip': 'none'
+          'background-clip': 'none',
+          'border-width': 10,
         }
       },
       {
         selector: 'node[type="antenna"]',
         style: {
-          'background-color': '#96D6A4',
-          'background-image': '../../../icons/antenna_icon_on.png',
+          'background-color': '#222e24',
+          'background-image': '../../../icons/antenna_icon_on_white.png',
           'shape': 'ellipse',
-          'width': 40,
-          'height': 40,
+          'width': 50,
+          'height': 50,
           'background-position-x': '50%',
           'background-position-y': '50%',
-          'background-width': '80%',
-          'background-height': '80%',
+          'background-width': '70%',
+          'background-height': '70%',
           'background-opacity': 1,
           'background-clip': 'none'
         }
@@ -79,8 +84,8 @@ export function createSCStyles() {
         selector: 'node[type="antenna-halo"]',
         style: {
           'background-color': '#FFE082',
-          'background-opacity': 0.1,
-          'border-width': 1,
+          'background-opacity': 0.8,
+          'border-width': 2,
           'shape': 'ellipse',
           'label': '',
           'z-index': 1,
@@ -93,7 +98,7 @@ export function createSCStyles() {
       {
         selector: 'node[type="antenna"][active="false"]',
         style: {
-          'background-image': '../../../icons/antenna_icon_off.png',
+          'background-image': '../../../icons/antenna_icon_off_white.png',
           'background-color': '#aaaaaa',
           'opacity': 0.7
         }
@@ -193,7 +198,16 @@ export function createSCStyles() {
     
     return baseStyles.concat(gameplayStyles);
 }
+const nodeShapes = [
+    'roundrectangle',
+    /*'heptagon', 'octagon'*/
+];
 
+// Fonction qui retourne une forme aléatoire de la liste
+function getRandomShape() {
+    const randomIndex = Math.floor(Math.random() * nodeShapes.length);
+    return nodeShapes[randomIndex];
+}
 export function setHaloVisibility(haloNode, isVisible) {
   if (!haloNode) return;
 

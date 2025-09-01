@@ -1,5 +1,10 @@
 const mongoose = require('mongoose');
 
+const optimalPathSchema = new mongoose.Schema({
+  color: { type: String, required: true },
+  path: { type: [String], required: true } // ex: ['U1', 'A1', 'R2', 'R5', 'A3', 'U2']
+}, { _id: false });
+
 // Schema for nodes in the graph
 const nodeSchema = new mongoose.Schema({
   id: {
@@ -99,7 +104,17 @@ const graphSchema = new mongoose.Schema({
     type: Number,
     default: null
   },
+
+    optimalAntennaSet: {
+    type: [String], // Un tableau d'IDs d'antennes
+    default: []
+  },
   
+  optimalPathSolution: {
+    type: [optimalPathSchema],
+    default: []
+  },
+
   antennaSettings: {
     consumptionEnabled: {
       type: Boolean,

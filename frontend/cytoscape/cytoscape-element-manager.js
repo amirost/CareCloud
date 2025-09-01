@@ -16,8 +16,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const elementId = element.id();
       const elementType = element.isNode() ? 'node' : 'edge';
       
-      // Si nous supprimons un utilisateur, trouvons et supprimons son partenaire
-      if (element.isNode() && element.data('type') === 'user') {
+      // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> LA CORRECTION EST ICI <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+      // Si nous supprimons un utilisateur ET que nous sommes en mode RV, trouvons et supprimons son partenaire.
+      if (element.isNode() && element.data('type') === 'user' && window.graphEditor.activeMode === 'RV') {
         // Récupérer l'ID numérique de l'utilisateur
         const userMatch = elementId.match(/U(\d+)/);
         if (userMatch && userMatch[1]) {
@@ -29,12 +30,13 @@ document.addEventListener("DOMContentLoaded", () => {
           const partnerNode = window.cy.getElementById(partnerId);
           
           if (partnerNode && partnerNode.length > 0) {
-            console.log(`Suppression automatique du partenaire ${partnerId}`);
+            console.log(`Suppression automatique du partenaire ${partnerId} (mode RV)`);
             // Supprimer le partenaire (en évitant la récursion)
             window.cy.remove(partnerNode);
           }
         }
       }
+      // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> FIN DE LA CORRECTION <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
       
       // Si deleting the source node for a connection, reset it
       if (window.cytoscapeEditor.resetSourceNode) {

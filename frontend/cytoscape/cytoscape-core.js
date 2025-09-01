@@ -45,7 +45,9 @@ document.addEventListener("DOMContentLoaded", () => {
       padding: 50,
       
       // Enable box selection
-      boxSelectionEnabled: true
+      boxSelectionEnabled: true,
+            panningEnabled: false,
+      userPanningEnabled: false,
     });
     
     // Register event handlers from other modules

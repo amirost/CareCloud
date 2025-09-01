@@ -47,6 +47,48 @@ export function initEventHandlers(gameState, uiManager) {
                 }
             });
             
+            gameState.cy.removeListener('mouseover', 'edge');
+            gameState.cy.removeListener('mouseout', 'edge');
+
+            // Mouse over event pour les liens
+            gameState.cy.on('mouseover', 'edge', function(event) {
+                const edge = event.target;
+                
+                // On ne veut pas de bulle sur les liens virtuels (connexions utilisateur-antenne)
+                if (edge.data('virtual')) {
+                    return;
+                }
+
+                // Récupérer les données du lien
+                const capacity = edge.data('capacity') || 0;
+                const consumption = edge.data('consumption') || 0;
+
+                // Formater le contenu HTML de la bulle
+                const content = `
+                    <div class="tooltip-info">
+                        <span>Capacité:</span>
+                        <span>${capacity}</span>
+                    </div>
+                    <div class="tooltip-info">
+                        <span>Conso.:</span>
+                        <span>${consumption.toFixed(0)} W</span>
+                    </div>
+                `;
+
+                // Obtenir la position de la souris
+                const posX = event.originalEvent.clientX;
+                const posY = event.originalEvent.clientY;
+                
+                // Afficher la bulle
+                uiManager.showTooltip(content, posX, posY);
+            });
+
+                        // Mouse out event pour les liens
+            gameState.cy.on('mouseout', 'edge', function(event) {
+                // Cacher la bulle, peu importe le lien
+                uiManager.hideTooltip();
+            });
+
             // Edge click event in phase 5 (optimization)
             gameState.cy.on('tap', 'edge', function(event) {
                 const edge = event.target;
@@ -235,8 +277,25 @@ updateEdgeVisualization(edge) {
             'opacity': 0.8
         });
     });
-}
-    };
+},
+
+    refreshAllEdgeVisuals() {
+        console.log("%c[Visuals] Rafraîchissement global de la visualisation des liens...", "font-weight: bold; color: teal;");
+
+        // 1. Suppression de TOUTES les arêtes parallèles existantes. Table rase.
+        gameState.cy.edges('[virtual][parent]').remove();
+
+        // 2. On parcourt l'état 'usedLinks' qui est la seule source de vérité.
+        gameState.usedLinks.forEach((linkInfo, edgeId) => {
+            const edge = gameState.cy.getElementById(edgeId);
+            if (edge.length > 0) {
+                // 3. On appelle updateEdgeVisualization qui va recréer les chemins
+                // pour ce lien, avec les bonnes couleurs et les bons offsets.
+                this.updateEdgeVisualization(edge);
+            }
+        });
+    },
+};
     
     // Self-reference for methods that need to call other methods in this object
     return eventHandlers;

@@ -6,10 +6,19 @@
 
 /* Cytoscape container for editor */
 #cy.cytoscape-container {
+  /* Ancien code :
   width: 1000px;
   height: 650px;
-  margin: 10px auto;
-  margin-bottom: 10px;
+  */
+
+  /* --- NOUVEAU CODE RESPONSIVE --- */
+  width: 90vw; /* Utilise 90% de la largeur de la fenêtre du navigateur */
+  height: 75vh; /* Utilise 75% de la hauteur de la fenêtre du navigateur */
+  max-width: 1600px; /* Empêche le canvas de devenir trop large sur les très grands écrans */
+  max-height: 900px; /* Limite la hauteur maximale */
+  
+  margin: 20px auto; /* Marge augmentée pour un meilleur espacement */
+  margin-bottom: 20px;
   border: 2px solid var(--color-primary-dark);
   border-radius: 8px;
   box-shadow: 0 4px 7px rgba(0, 0, 0, 0.2);
@@ -180,19 +189,56 @@
   background-color: #45a049;
 }
 
+/* --- STYLES FOR COURSE EDITOR LEVEL BLOCKS --- */
+.level-tag-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #4a5568;
+  color: #edf2f7;
+  font-weight: bold;
+  padding: 8px 12px;
+  border-radius: 4px 4px 0 0;
+  font-family: 'Poppins', sans-serif;
+  cursor: default;
+  user-select: none;
+}
 
+.delete-level-block-btn {
+  background: none;
+  border: none;
+  color: #cbd5e0;
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+  transition: color 0.2s ease-in-out;
+}
+
+.delete-level-block-btn:hover {
+  color: #f56565;
+}
+
+.level-tag-content {
+  border: 1px solid #e2e8f0;
+  border-top: none;
+  padding: 12px;
+  border-radius: 0 0 4px 4px;
+  min-height: 50px;
+}
 
 /* Responsive adjustments */
 @media (max-width: 1200px) {
   #cy.cytoscape-container {
     width: 95%;
-    height: 600px;
+    height: 70vh; /* Adjust height for medium screens */
   }
 }
 
 @media (max-width: 768px) {
   #cy.cytoscape-container {
-    height: 500px;
+    height: 65vh; /* Adjust height for smaller screens */
   }
   
   .antenna-toggle-container {

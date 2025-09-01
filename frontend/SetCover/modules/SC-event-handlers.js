@@ -60,12 +60,25 @@ export function initEventHandlers(gameState, uiManager) {
             gameState.cy.on('mouseover', 'node[type="antenna"]', function(event) {
                 const antennaNode = event.target;
                 highlightHaloOnHover(antennaNode);
+
+                const consumption = antennaNode.data('consumption') || 0;
+                // Formater le contenu de la bulle
+                const content = `Consommation: <strong>${consumption.toFixed(1)} W</strong>`;
+                
+                // Obtenir la position de la souris par rapport à la page
+                const posX = event.originalEvent.clientX;
+                const posY = event.originalEvent.clientY;
+                
+                // Appeler le uiManager pour afficher la bulle
+                uiManager.showTooltip(content, posX, posY);
             });
             
             // Mouse out event for antennas - restore halo opacity
             gameState.cy.on('mouseout', 'node[type="antenna"]', function(event) {
                 const antennaNode = event.target;
                 restoreHaloOpacity(antennaNode);
+
+                uiManager.hideTooltip();
             });
 
             // Edge click event - reset user connection if clicking on virtual edge

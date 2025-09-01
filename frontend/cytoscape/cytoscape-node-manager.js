@@ -51,12 +51,12 @@ document.addEventListener("DOMContentLoaded", () => {
       // Apply colors directly for user nodes
       if (nodeType === 'user') {
         // Array of 20 distinct colors
-        const userColors = [
-          '#FF6B6B', '#4ECDC4', '#FFD166', '#118AB2', '#5E60CE', 
-          '#E76F51', '#2A9D8F', '#F4A261', '#E9C46A', '#264653',
-          '#FFAFCC', '#CDB4DB', '#BDE0FE', '#A2D2FF', '#FFC8DD',
-          '#F72585', '#7209B7', '#3A0CA3', '#4361EE', '#4CC9F0'
-        ];
+      const userColors = [
+        "#cc3838", "#1bb3a9", "#cc9e33", "#0e6d8f", "#2b2d9b", 
+        "#b43c1e", "#217e72", "#c16f2e", "#b79137", "#1e3842",
+        "#ff7cd9", "#9a81a8", "#8bbde5", "#6f9fcc", "#ff95aA",
+        "#c40058", "#3f0084", "#210070", "#2034bb", "#1996bd"
+      ];
         
         let colorIndex;
         let colorGroup;

@@ -7,6 +7,7 @@ import { initGamePhases } from './modules/SC-game-phases.js';
 import { initEventHandlers } from './modules/SC-event-handlers.js';
 import { initSolutionValidator } from './modules/SC-solution-validator.js';
 import { initPathFinder } from './modules/SC-path-finder.js';
+import { initCourseContent } from '../course-content.js';
 
 function debounce(func, wait, immediate) {
   let timeout;
@@ -67,9 +68,12 @@ async function initializeGame() {
     
     // Initialize UI manager
     const uiManager = initUIManager(gameState);
+    uiManager.initTooltip();
     
     // Initialize event handlers
     const eventHandlers = initEventHandlers(gameState, uiManager);
+
+    gameState.eventHandlers = eventHandlers;
     
     // Initialize game phases
     const gamePhases = initGamePhases(gameState, uiManager, eventHandlers);
@@ -81,6 +85,9 @@ async function initializeGame() {
     // Initialize path finder for automated antenna optimization
     const pathFinder = initPathFinder(gameState, uiManager);
     gameState.pathFinder = pathFinder;
+
+    const courseContent = initCourseContent(gameState, uiManager);
+    gameState.courseContentModule = courseContent;
 
     // Store game phases in gameState for access by other modules
     gameState.gamePhases = gamePhases;
@@ -96,6 +103,8 @@ async function initializeGame() {
     
     // Set up path finder buttons
     pathFinder.setupPathFinderButtons();
+
+    courseContent.setupCourseButton();
     
     const resetButton = document.getElementById('resetViewBtn');
     if (resetButton) {
@@ -151,13 +160,14 @@ async function initializeGame() {
         // Un petit délai pour assurer que tout est chargé correctement
         setTimeout(() => {
           gameState.courseContentModule.showStartContent();
-        }, 800);
+        }, 900);
       }
     }
     
     // Étendre le graphLoader pour appeler showLevelStartMessage après chargement d'un niveau
     const originalStartGameplay = graphLoader.startGameplay;
     graphLoader.startGameplay = function(graphId) {
+      document.querySelector('.gameplay').style.visibility = 'visible';
       originalStartGameplay.call(this, graphId);
       
       // Ajouter un délai pour afficher le message après le chargement

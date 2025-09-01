@@ -47,7 +47,9 @@ const cytoscapeStyle = [
     selector: 'node[type="router"]',
     style: {
       'background-color': '#8EB8FF',  // Less saturated blue for routers
-      'shape': 'ellipse'
+      'shape': 'ellipse',
+      'width': 50,
+      'height': 50,
     }
   },
   {
@@ -55,7 +57,7 @@ const cytoscapeStyle = [
     style: {
       //'background-color': '#FFA996',  // Less saturated red for users
       'background-image': '../icons/user_icon.png',
-      'shape': 'ellipse',
+      'shape': 'roundrectangle',
       'background-fit': 'cover',
       'background-position-x': '50%',
       'background-position-y': '50%',
@@ -94,8 +96,8 @@ const cytoscapeStyle = [
     style: {
       'background-color': '#96D6A4',  // Less saturated green for antennas
       'shape': 'ellipse',
-      'width': 40,
-      'height': 40
+      'width': 50,
+      'height': 50,
     }
   },
   {

@@ -15,14 +15,44 @@ export function initUIManager(gameState) {
         popupMessage: document.getElementById("popup-message"),
         connectedCount: document.getElementById("connected-count"),
         totalUsers: document.getElementById("total-users"),
-        activeAntennas: document.getElementById("active-antennas"),
-        totalAntennas: document.getElementById("total-antennas"),
+        consumption: document.getElementById("consumption"),
         consumptionGauge: document.getElementById("consumption-gauge"),
         consumptionPercentage: document.getElementById("consumption-percentage"),
-        userItemsContainer: document.getElementById("user-items-container")
+        userItemsContainer: document.getElementById("user-items-container"),
+
+        gameTooltip: null
     };
     
     return {
+        initTooltip() {
+            let tooltip = document.getElementById('game-tooltip');
+            if (!tooltip) {
+                tooltip = document.createElement('div');
+                tooltip.id = 'game-tooltip';
+                tooltip.className = 'game-tooltip';
+                document.body.appendChild(tooltip); // On l'ajoute au body pour qu'elle soit au-dessus de tout
+            }
+            ui.gameTooltip = tooltip;
+            console.log("Tooltip element initialized.");
+        },
+
+        // NOUVELLE FONCTION : Pour afficher la bulle
+        showTooltip(content, x, y) {
+            if (!ui.gameTooltip) return;
+            ui.gameTooltip.innerHTML = content;
+            // On positionne la bulle en fonction des coordonnées de la souris
+            ui.gameTooltip.style.left = `${x}px`;
+            ui.gameTooltip.style.top = `${y}px`;
+            ui.gameTooltip.classList.add('visible');
+        },
+
+        // NOUVELLE FONCTION : Pour cacher la bulle
+        hideTooltip() {
+            if (!ui.gameTooltip) return;
+            ui.gameTooltip.classList.remove('visible');
+        },
+
+
         // Display the list of graphs
         displayGraphList(graphs, graphLoader) {
             ui.graphList.innerHTML = "";
@@ -39,9 +69,9 @@ export function initUIManager(gameState) {
                 const content = `
                     <div class="graph-info">
                         <div class="graph-name">${graph.name}</div>
-                        <div class="graph-date">Created: ${formattedDate}</div>
+                        <div class="graph-date">Créé le : ${formattedDate}</div>
                     </div>
-                    <button class="play-button" data-id="${graph._id}">Play</button>
+                    <button class="play-button" data-id="${graph._id}">Jouer</button>
                 `;
                 
                 listItem.innerHTML = content;
@@ -71,6 +101,7 @@ export function initUIManager(gameState) {
             if (gameState.cy) {
                 gameState.cy.destroy();
                 gameState.cy = null;
+                window.cy = null; // <-- AJOUT IMPORTANT
             }
             
             // Reset game state
@@ -79,7 +110,16 @@ export function initUIManager(gameState) {
         
         // Set popup message
         setPopupMessage(message) {
-            ui.popupMessage.textContent = message;
+            ui.popupMessage.classList.remove('popup-update-animation');
+            
+            // 2. On met à jour le contenu.
+            ui.popupMessage.innerHTML = message;
+
+            // 3. On force le "reflow" du navigateur.
+            void ui.popupMessage.offsetWidth;
+
+            // 4. On ré-applique la NOUVELLE classe pour lancer l'animation.
+            ui.popupMessage.classList.add('popup-update-animation');
         },
         
         // Update game statistics
@@ -88,7 +128,7 @@ export function initUIManager(gameState) {
             ui.connectedCount.textContent = gameState.connectedUsers.size;
             
             // Update active antennas count
-            ui.activeAntennas.textContent = gameState.activeAntennas.size;
+            //ui.activeAntennas.textContent = gameState.activeAntennas.size;
             
             // Calculate current consumption based on active antennas only
             let totalConsumption = 0;
@@ -114,12 +154,45 @@ export function initUIManager(gameState) {
             
             // Use stored initial value if available
             const maxConsumption = gameState.initialConsumption || initialConsumption;
-            
+
+            if(ui.consumption) {
+                ui.consumption.textContent = totalConsumption.toFixed(0);
+            }            
             // Update the energy savings gauge
             this.updateEnergySavingsGauge(totalConsumption, maxConsumption);
             
             // Update user status items
             this.updateUserItems();
+            
+            // --- DÉBUT DE LA LOGIQUE D'AIDE CONTEXTUELLE CORRIGÉE ---
+            
+            const isWin = gameState.solutionValidator ? gameState.solutionValidator.checkWinCondition() : false;
+            const areAllUsersConnected = gameState.solutionValidator ? gameState.solutionValidator.areAllUsersConnected() : false;
+
+            // Condition 1 & 2 : On n'a pas gagné, mais tous les utilisateurs sont bien connectés.
+            if (!isWin && areAllUsersConnected) {
+                
+                // Condition 3 : On vérifie s'il reste des antennes qui pourraient être éteintes.
+                let canTurnOffMoreAntennas = false;
+                gameState.cy.nodes('[type="antenna"]').forEach(antennaNode => {
+                    const antennaId = antennaNode.id();
+                    const isActive = antennaNode.data('active');
+                    const usersOnThisAntenna = gameState.antennaUsers.get(antennaId)?.size || 0;
+
+                    // Une antenne peut être éteinte si elle est active MAIS qu'elle n'a aucun utilisateur.
+                    if (isActive && usersOnThisAntenna === 0) {
+                        canTurnOffMoreAntennas = true;
+                    }
+                });
+
+                // Si on ne peut plus éteindre d'antennes, c'est le moment d'afficher l'aide.
+                if (!canTurnOffMoreAntennas) {
+                    this.setPopupMessage("Vous êtes proche ! Essayez une autre combinaison d'antennes en cliquant sur <bold style=\"color: #ffffffff; border: 0px solid #ffffffff; border-radius: 5px; padding: 2px 4px; background: rgba(223, 86, 86, 0.9);\">Déconnecter</bold> pour un déconnecter un utilisateur");
+                }
+                // Sinon (s'il reste des antennes à éteindre), le message par défaut de la phase 3 ("Optimisez...") reste affiché, ce qui est correct.
+            }
+
+            // --- FIN DE LA LOGIQUE D'AIDE CONTEXTUELLE ---
             
             // Check win condition and update progress if solution validator exists
             if (gameState.solutionValidator) {
@@ -127,64 +200,118 @@ export function initUIManager(gameState) {
             }
         },
         
-        // Update energy savings gauge
         updateEnergySavingsGauge(currentConsumption, maxConsumption) {
             if (!ui.consumptionGauge || !ui.consumptionPercentage) return;
-            
-            // Check if minimum consumption has been recorded
-            const minimumConsumption = gameState.minimumConsumption;
-            
-            if (minimumConsumption === null || minimumConsumption === undefined) {
-                // No solution recorded yet - show info message
-                ui.consumptionGauge.style.width = "0%";
-                ui.consumptionGauge.style.backgroundColor = "#9e9e9e"; // Grey
-                ui.consumptionPercentage.textContent = "Enregistrez une solution (touche 's')";
-                
-                // Update gauge label
-                const gaugeLabel = document.querySelector('.gauge-label span:first-child');
-                if (gaugeLabel) {
-                    gaugeLabel.textContent = "Économie d'énergie";
+
+            const targetConsumption = gameState.minimumConsumption;
+
+            // Si on n'a pas encore de cible, on utilise l'ancienne logique de couleur.
+            if (targetConsumption === null || targetConsumption === undefined) {
+                if (maxConsumption === 0) {
+                    ui.consumptionGauge.style.width = "0%";
+                    ui.consumptionPercentage.textContent = "N/A";
+                    ui.consumptionGauge.style.backgroundColor = '#9e9e9e'; // Gris
+                    return;
                 }
+                const percentage = (currentConsumption / maxConsumption) * 100;
+                ui.consumptionGauge.style.width = `${Math.min(100, percentage)}%`;
+                ui.consumptionPercentage.textContent = `${Math.round(percentage)}% de la conso. max`;
+                
+                if (percentage <= 33) ui.consumptionGauge.style.backgroundColor = '#4CAF50'; // Vert
+                else if (percentage <= 66) ui.consumptionGauge.style.backgroundColor = '#FFC107'; // Jaune/Ambre
+                else ui.consumptionGauge.style.backgroundColor = '#F44336'; // Rouge
                 
                 return;
             }
+
+            // --- NOUVELLE LOGIQUE DE COULEUR BASÉE SUR L'OBJECTIF ---
+            const widthPercentage = (currentConsumption / maxConsumption) * 100;
+            ui.consumptionGauge.style.width = `${Math.min(100, widthPercentage)}%`;
             
-            // Calculate energy savings percentage
-            // Formula: (maxConsumption - currentConsumption) / (maxConsumption - minimumConsumption) * 100
-            let savingsPercentage = 0;
-            if (maxConsumption > minimumConsumption) {
-                savingsPercentage = Math.max(0, Math.min(100, 
-                    ((maxConsumption - currentConsumption) / (maxConsumption - minimumConsumption)) * 100
-                ));
+            let color;
+            // CAS 1 : On a atteint ou dépassé l'objectif (bravo !)
+            if (currentConsumption <= targetConsumption) {
+                color = '#4CAF50'; // Vert
+                ui.consumptionPercentage.textContent = "Objectif atteint !";
+            } 
+            // CAS 2 : On est au-dessus de l'objectif.
+            else {
+                // On calcule à quel point on est "loin" de l'objectif.
+                // "Plage d'erreur" = (conso. max - objectif)
+                const rangeAboveTarget = maxConsumption - targetConsumption;
+                // "Écart" = (conso. actuelle - objectif)
+                const distanceFromTarget = currentConsumption - targetConsumption;
+
+                let severity = 0; // 0 = tout près de l'objectif, 1 = au max de la conso
+                if (rangeAboveTarget > 0) {
+                    severity = Math.min(1, distanceFromTarget / rangeAboveTarget);
+                }
+
+                // Interpolation de couleur entre Jaune (proche de l'objectif) et Rouge (loin)
+                // Jaune: (255, 193, 7) -> #FFC107
+                // Rouge: (244, 67, 54) -> #F44336
+                const r = Math.round(255 + (244 - 255) * severity); // de 255 à 244
+                const g = Math.round(193 + (67 - 193) * severity);  // de 193 à 67
+                const b = Math.round(7 + (54 - 7) * severity);      // de 7 à 54
+                color = `rgb(${r}, ${g}, ${b})`;
+                
+                const remainingEffort = distanceFromTarget.toFixed(0);
+                ui.consumptionPercentage.textContent = `+${remainingEffort} W de l'objectif`;
             }
+
+            ui.consumptionGauge.style.backgroundColor = color;
             
-            // Round for display
-            const roundedPercentage = Math.round(savingsPercentage);
-            
-            // Update gauge width
-            ui.consumptionGauge.style.width = `${roundedPercentage}%`;
-            
-            // Update percentage text
-            ui.consumptionPercentage.textContent = `${roundedPercentage}% d'économie`;
-            
-            // Update gauge label
-            const gaugeLabel = document.querySelector('.gauge-label span:first-child');
-            if (gaugeLabel) {
-                gaugeLabel.textContent = "Économie d'énergie";
-            }
-            
-            // Change color based on energy savings level
-            if (savingsPercentage >= 90) {
-                ui.consumptionGauge.style.backgroundColor = '#4CAF50'; // Green
-            } else if (savingsPercentage >= 60) {
-                ui.consumptionGauge.style.backgroundColor = '#8BC34A'; // Light green
-            } else if (savingsPercentage >= 40) {
-                ui.consumptionGauge.style.backgroundColor = '#FFEB3B'; // Yellow
-            } else if (savingsPercentage >= 20) {
-                ui.consumptionGauge.style.backgroundColor = '#FFC107'; // Amber
-            } else {
-                ui.consumptionGauge.style.backgroundColor = '#FF5722'; // Orange/Red
-            }
+            // Afficher le marqueur de l'objectif (code inchangé)
+            this.updateOptimalSolutionMarker(targetConsumption, maxConsumption);
+        },
+
+        updateOptimalSolutionMarker(targetConsumption, maxConsumption) {
+                    const gaugeTrack = document.querySelector('.gauge-track');
+                    if (!gaugeTrack) return;
+
+                    // Chercher le conteneur principal du marqueur
+                    let container = document.getElementById('optimal-marker-container');
+                    
+                    // S'il n'existe pas, on le crée avec tous ses enfants
+                    if (!container) {
+                        container = document.createElement('div');
+                        container.id = 'optimal-marker-container';
+                        container.className = 'optimal-marker-container';
+
+                        // 1. Créer le label "Objectif"
+                        const label = document.createElement('div');
+                        label.className = 'optimal-marker-label';
+                        label.textContent = 'Optimale';
+                        
+                        // 2. Créer la flèche
+                        const arrow = document.createElement('div');
+                        arrow.className = 'optimal-marker-arrow';
+
+                        // 3. Créer la ligne blanche
+                        const line = document.createElement('div');
+                        line.id = 'optimal-marker-line'; // ID spécifique pour la ligne
+                        
+                        // Ajouter les éléments au conteneur
+                        container.appendChild(label);
+                        container.appendChild(arrow);
+                        container.appendChild(line);
+
+                        // S'assurer que le parent est bien positionné
+                        gaugeTrack.style.position = 'relative';
+                        gaugeTrack.appendChild(container);
+                    }
+
+                    // Mettre à jour la position du conteneur entier
+                    if (maxConsumption > 0) {
+                        const markerPercentage = (targetConsumption / maxConsumption) * 100;
+                        // On centre le conteneur sur la position cible.
+                        // Le `transform` dans le CSS s'occupera de le décaler correctement.
+                        container.style.left = `${Math.min(100, markerPercentage)}%`;
+                        container.title = `Objectif Optimal: ${targetConsumption.toFixed(0)} W`;
+                        container.style.display = 'flex'; // Afficher le conteneur
+                    } else {
+                        container.style.display = 'none'; // Cacher s'il n'y a pas de conso max
+                    }
         },
         
         // Set total users count
@@ -192,10 +319,7 @@ export function initUIManager(gameState) {
             ui.totalUsers.textContent = count;
         },
         
-        // Set total antennas count
-        setTotalAntennas(count) {
-            ui.totalAntennas.textContent = count;
-        },
+
         
         // Create user items in the sidebar
         createUserItems() {
@@ -212,6 +336,10 @@ export function initUIManager(gameState) {
                 const userItem = document.createElement('div');
                 userItem.className = 'user-item';
                 userItem.setAttribute('data-user-id', userId);
+
+                if (gameState.connectedUsers.has(userId)) {
+                    userItem.classList.add('is-connected');
+                }
                 
                 // Add status class if connected or selected
                 if (gameState.connectedUsers.has(userId)) {
@@ -254,7 +382,7 @@ export function initUIManager(gameState) {
                 // Reset button - only enabled if user is connected
                 const resetBtn = document.createElement('button');
                 resetBtn.className = 'user-reset-btn';
-                resetBtn.textContent = 'Reset';
+                resetBtn.textContent = 'Déconnecter';
                 resetBtn.disabled = !gameState.connectedUsers.has(userId);
                 
                 resetBtn.addEventListener('click', (event) => {
@@ -295,7 +423,9 @@ export function initUIManager(gameState) {
             // Update existing items
             Array.from(ui.userItemsContainer.children).forEach(item => {
                 const userId = item.getAttribute('data-user-id');
-                
+
+                item.classList.toggle('is-connected', gameState.connectedUsers.has(userId));
+
                 // Update status class
                 item.classList.remove('connected', 'selected');
                 
@@ -521,6 +651,8 @@ export function initUIManager(gameState) {
         
         // Show level complete message
         showLevelCompleteMessage() {
+
+             this.hideTooltip();
             // Avoid showing multiple times
             if (document.querySelector('.level-complete-message')) {
                 return;
@@ -533,10 +665,10 @@ export function initUIManager(gameState) {
             content.className = 'level-complete-content';
             
             const title = document.createElement('h2');
-            title.textContent = 'Niveau Terminé!';
+            title.textContent = 'Niveau Terminé !';
             
             const subtitle = document.createElement('p');
-            subtitle.textContent = 'Vous avez trouvé la solution optimale!';
+            subtitle.textContent = 'Vous avez trouvé la solution optimale !';
             
             const continueButton = document.createElement('button');
             continueButton.textContent = 'Continuer';
@@ -578,6 +710,30 @@ export function initUIManager(gameState) {
                     document.body.removeChild(confettiContainer);
                 }
             }, 5000);
-        }
+        },
+        
+        createFloatingText(text, targetElement, type = 'plus') {
+            if (!targetElement) {
+                console.error("Impossible de créer le texte flottant : élément cible manquant.");
+                return;
+            }
+            const textElement = document.createElement('div');
+            textElement.className = 'floating-text';
+            textElement.textContent = text;
+            if (type === 'plus') {
+                textElement.classList.add('score-plus');
+            } else if (type === 'minus') {
+                textElement.classList.add('score-minus');
+            }
+            document.body.appendChild(textElement);
+            const rect = targetElement.getBoundingClientRect();
+            textElement.style.left = `${rect.left + rect.width / 2}px`;
+            textElement.style.top = `${rect.top}px`;
+            setTimeout(() => {
+                if (textElement.parentElement) {
+                    textElement.parentElement.removeChild(textElement);
+                }
+            }, 1500);
+        },
     };
 }

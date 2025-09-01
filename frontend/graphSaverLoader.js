@@ -6,45 +6,37 @@ document.addEventListener("DOMContentLoaded", () => {
   // Function to detect and update server address
   async function updateServerAddress() {
     try {
-      // First try with the current window location (will work in most cases)
-      const currentHost = window.location.hostname;
-      const currentPort = "3000"; // Always use the backend port
-      
-      if (currentHost && currentHost !== "localhost" && currentHost !== "127.0.0.1") {
-        API_BASE = `http://${currentHost}:${currentPort}`;
+      const frontendHost = window.location.hostname;
+
+      // CASE 1: If frontend is on localhost, force API to localhost.
+      if (frontendHost === 'localhost' || frontendHost === '127.0.0.1') {
+        console.log("Frontend is on localhost. Forcing API connection to localhost.");
+        API_BASE = "http://localhost:3000";
         API_URL = `${API_BASE}/api/graphs`;
-        console.log(`Using current host: ${API_BASE}`);
         
-        // Test if this address works
-        const testResponse = await fetch(`${API_BASE}`, { 
-          method: 'HEAD',
-          headers: { 'Cache-Control': 'no-cache' }
-        });
-        
-        if (testResponse.ok) {
-          console.log(`Successfully connected to: ${API_BASE}`);
-          return; // We've found a working address
-        }
+        await fetch(API_BASE, { method: 'HEAD', headers: { 'Cache-Control': 'no-cache' } });
+        console.log(`Successfully connected to API at: ${API_BASE}`);
+        return;
       }
+
+      // CASE 2: If frontend is on a network host, try API on the same host.
+      console.log(`Frontend is on a network host (${frontendHost}). Trying to connect to API on the same host.`);
+      API_BASE = `http://${frontendHost}:3000`;
+      API_URL = `${API_BASE}/api/graphs`;
       
-      // If window location doesn't work, try the server info endpoint
-      console.log("Trying to detect server address...");
-      const response = await fetch(`${API_BASE}/api/serverinfo`);
+      const testResponse = await fetch(API_BASE, { method: 'HEAD', headers: { 'Cache-Control': 'no-cache' } });
       
-      if (!response.ok) {
-        throw new Error(`Failed to get server info: ${response.status}`);
+      if (testResponse.ok) {
+        console.log(`Successfully connected to API at: ${API_BASE}`);
+        return;
+      } else {
+        throw new Error(`Failed to connect to API on host ${frontendHost}`);
       }
-      
-      const result = await response.json();
-      
-      if (result.success && result.ip) {
-        // Update API URLs with actual server IP and port
-        API_BASE = `http://${result.ip}:${result.port}`;
-        API_URL = `${API_BASE}/api/graphs`;
-        console.log(`Connected to server at: ${API_BASE}`);
-      }
+
     } catch (error) {
-      console.warn("Using default server address. Error:", error.message);
+      console.warn("Could not auto-detect server address. Falling back to default 'http://localhost:3000'. Error:", error.message);
+      API_BASE = "http://localhost:3000";
+      API_URL = `${API_BASE}/api/graphs`;
     }
   }
   
@@ -54,102 +46,91 @@ document.addEventListener("DOMContentLoaded", () => {
   // Create namespace for graph persistence functions
   window.graphPersistence = {};
   
-  /**
-   * Save the current graph to the database
-   * @param {string} name - Name of the graph
-   * @returns {Promise<Object>} - Result of the save operation
-   */
+    async function findGraphByName(name, mode) {
+    try {
+      const response = await fetch(`${API_URL}/find?name=${encodeURIComponent(name)}&mode=${mode}`);
+      if (!response.ok) {
+        return null; 
+      }
+      const result = await response.json();
+      if (result.success && result.data) {
+        return result.data;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error finding graph by name:", error);
+      return null;
+    }
+  }
+
   window.graphPersistence.saveGraph = async function(name) {
     if (!window.cy) {
-      console.error("Cytoscape not initialized");
       return { success: false, message: "Editor not initialized" };
     }
     
     try {
-      // Collect all the nodes (excluding halos, which will be recreated)
       const nodes = [];
       window.cy.nodes().forEach(node => {
-        // Skip halo nodes as they're tied to antennas
         if (node.data('type') === 'antenna-halo') return;
-        
-        const nodeData = {
-          id: node.id(),
-          type: node.data('type'),
-          x: Math.round(node.position('x')),
-          y: Math.round(node.position('y'))
-        };
-        
-        // Add antenna-specific properties
+        const nodeData = { id: node.id(), type: node.data('type'), x: Math.round(node.position('x')), y: Math.round(node.position('y')) };
         if (node.data('type') === 'antenna') {
           nodeData.radius = node.data('radius');
           nodeData.haloId = node.data('haloId');
           nodeData.consumption = node.data('consumption') || 0;
         }
-        
         nodes.push(nodeData);
       });
       
-      // Collect all the edges
       const edges = [];
       window.cy.edges().forEach(edge => {
-        edges.push({
-          id: edge.id(),
-          source: edge.source().id(),
-          target: edge.target().id(),
-          capacity: edge.data('capacity') || 1,
-          distance: edge.data('distance') || 1,
-          consumption: edge.data('consumption') || 100,
-          thickness: edge.data('thickness') || 2
-        });
+        edges.push({ id: edge.id(), source: edge.source().id(), target: edge.target().id(), capacity: edge.data('capacity') || 1, distance: edge.data('distance') || 1, consumption: edge.data('consumption') || 100, thickness: edge.data('thickness') || 2 });
       });
       
-      // Get course content if it exists (from window.cy)
-      // NOTE: Using a different variable name to avoid conflicts
-      const graphCourseContent = window.cy && window.cy.courseContent ? window.cy.courseContent : null;
+      const graphCourseContent = window.cy?.courseContent || null;
   
-      // Create the graph data
       const graphData = {
-        name: name || `Graph_${new Date().toISOString().slice(0, 10)}`,
+        name: name,
         mode: window.graphEditor.activeMode,
         nodes: nodes,
         edges: edges,
-        courseContent: graphCourseContent, // Use our safe variable name
-        antennaSettings: {
-          consumptionEnabled: window.graphEditor.antennaSettings.consumptionEnabled,
-          consumptionRadiusEnabled: window.graphEditor.antennaSettings.consumptionRadiusEnabled,
-          consumptionBase: window.graphEditor.antennaSettings.consumptionBase
-        }
+        courseContent: graphCourseContent,
+        antennaSettings: window.graphEditor.antennaSettings
       };
-      
-      // Call the API to save the graph
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(graphData)
-      });
+
+      const existingGraph = await findGraphByName(name, graphData.mode);
+
+      let response;
+      if (existingGraph) {
+        console.log(`Graph "${name}" already exists with ID ${existingGraph._id}. Updating it.`);
+        response = await fetch(`${API_URL}/${existingGraph._id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(graphData)
+        });
+      } else {
+        console.log(`Graph "${name}" does not exist. Creating a new one.`);
+        response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(graphData)
+        });
+      }
       
       const result = await response.json();
       
       if (result.success) {
-        console.log("Graph saved successfully:", result.data);
+        console.log("Graph saved/updated successfully:", result.data);
         return { success: true, data: result.data };
       } else {
-        console.error("Failed to save graph:", result.message);
+        console.error("Failed to save/update graph:", result.message);
         return { success: false, message: result.message };
       }
     } catch (error) {
-      console.error("Error saving graph:", error);
+      console.error("Error saving/updating graph:", error);
       return { success: false, message: error.message };
     }
   };
   
-  /**
-   * Load a graph from the database by ID
-   * @param {string} graphId - ID of the graph to load
-   * @returns {Promise<Object>} - Result of the load operation
-   */
   window.graphPersistence.loadGraph = async function(graphId) {
     if (!window.cy) {
       console.error("Cytoscape not initialized");
@@ -157,7 +138,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
     try {
-      // Call the API to get the graph
       const response = await fetch(`${API_URL}/${graphId}`);
       const result = await response.json();
       
@@ -168,36 +148,25 @@ document.addEventListener("DOMContentLoaded", () => {
       
       const graph = result.data;
       
-      // Clear existing elements
       window.cy.elements().remove();
-      
-      // Set the active mode
       window.graphEditor.activeMode = graph.mode;
 
-      // Load course content if available - store it on the cy instance
       if (graph.courseContent) {
         window.cy.courseContent = graph.courseContent;
-        console.log("Course content loaded:", graph.courseContent);
       } else {
         window.cy.courseContent = null;
       }
       
-      // Update antenna settings
       if (graph.antennaSettings) {
-        window.graphEditor.antennaSettings.consumptionEnabled = 
-          graph.antennaSettings.consumptionEnabled || false;
-        window.graphEditor.antennaSettings.consumptionRadiusEnabled = 
-          graph.antennaSettings.consumptionRadiusEnabled || false;
-        window.graphEditor.antennaSettings.consumptionBase = 
-          graph.antennaSettings.consumptionBase || 0;
+        window.graphEditor.antennaSettings.consumptionEnabled = graph.antennaSettings.consumptionEnabled || false;
+        window.graphEditor.antennaSettings.consumptionRadiusEnabled = graph.antennaSettings.consumptionRadiusEnabled || false;
+        window.graphEditor.antennaSettings.consumptionBase = graph.antennaSettings.consumptionBase || 0;
         
-        // Update UI toggle for consumption if it exists
         const consumptionToggle = document.getElementById('antennaConsumptionToggle');
         if (consumptionToggle) {
           consumptionToggle.checked = window.graphEditor.antennaSettings.consumptionEnabled;
         }
         
-        // Update UI toggle for radius-based consumption if it exists
         const radiusToggle = document.getElementById('antennaRadiusToggle');
         if (radiusToggle) {
           radiusToggle.checked = window.graphEditor.antennaSettings.consumptionRadiusEnabled;
@@ -205,105 +174,86 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
       
-      // Add nodes first
       graph.nodes.forEach(node => {
-        // Add the node
         window.cy.add({
           group: 'nodes',
-          data: {
-            id: node.id,
-            type: node.type,
-            ...node // Include all other node properties
-          },
-          position: {
-            x: node.x,
-            y: node.y
-          }
+          data: { id: node.id, type: node.type, ...node },
+          position: { x: node.x, y: node.y }
         });
         
-        // If this is an antenna, also add its halo
         if (node.type === 'antenna' && node.haloId) {
           window.cy.add({
             group: 'nodes',
-            data: {
-              id: node.haloId,
-              type: 'antenna-halo',
-              radius: node.radius
-            },
-            position: {
-              x: node.x,
-              y: node.y
-            },
-            style: {
-              'width': node.radius * 2,
-              'height': node.radius * 2
-            }
+            data: { id: node.haloId, type: 'antenna-halo', radius: node.radius },
+            position: { x: node.x, y: node.y },
+            style: { 'width': node.radius * 2, 'height': node.radius * 2 }
           });
         }
       });
       
-      // Then add edges
       graph.edges.forEach(edge => {
         window.cy.add({
           group: 'edges',
-          data: {
-            id: edge.id,
-            source: edge.source,
-            target: edge.target,
-            capacity: edge.capacity,
-            distance: edge.distance,
-            consumption: edge.consumption,
-            thickness: edge.thickness
-          }
+          data: { id: edge.id, source: edge.source, target: edge.target, capacity: edge.capacity, distance: edge.distance, consumption: edge.consumption, thickness: edge.thickness }
         });
       });
       
-      // Reset counters to prevent ID collisions on future additions
+      const userColors = [
+            "#cc3838", "#1bb3a9", "#cc9e33", "#0e6d8f", "#2b2d9b", 
+            "#b43c1e", "#217e72", "#c16f2e", "#b79137", "#1e3842",
+            "#ff7cd9", "#9a81a8", "#8bbde5", "#6f9fcc", "#ff95aA",
+            "#c40058", "#3f0084", "#210070", "#2034bb", "#1996bd"
+      ];
+
+      if (graph.mode === "RV") {
+        const userNodes = window.cy.nodes('[type="user"]');
+        const sortedUsers = userNodes.sort((a, b) => {
+            const numA = parseInt(a.id().match(/\d+/)[0] || 0);
+            const numB = parseInt(b.id().match(/\d+/)[0] || 0);
+            return numA - numB;
+        });
+        for (let i = 0; i < sortedUsers.length; i += 2) {
+            const colorIndex = Math.floor(i / 2) % userColors.length;
+            const color = userColors[colorIndex];
+            sortedUsers[i].style('background-color', color);
+            if (i + 1 < sortedUsers.length) {
+                sortedUsers[i + 1].style('background-color', color);
+            }
+        }
+      } else if (graph.mode === "SC") {
+        const userNodes = window.cy.nodes('[type="user"]');
+        const sortedUsers = userNodes.sort((a, b) => {
+            const numA = parseInt(a.id().match(/\d+/)[0] || 0);
+            const numB = parseInt(b.id().match(/\d+/)[0] || 0);
+            return numA - numB;
+        });
+        sortedUsers.forEach((userNode, index) => {
+            const colorIndex = index % userColors.length;
+            const color = userColors[colorIndex];
+            userNode.style('background-color', color);
+        });
+      }
+
       window.graphEditor.resetCounters();
       
-      // Extract highest number from each type of node
       window.cy.nodes().forEach(node => {
         const id = node.id();
         const type = node.data('type');
-        
-        // Skip halo nodes
         if (type === 'antenna-halo') return;
-        
-        // Extract the numeric part and update counters
         const match = id.match(/[A-Za-z]+(\d+)/);
         if (match && match[1]) {
           const num = parseInt(match[1]);
-          
-          switch (type) {
-            case 'router':
-              window.graphEditor.counters.router = Math.max(window.graphEditor.counters.router, num + 1);
-              break;
-            case 'antenna':
-              window.graphEditor.counters.antenna = Math.max(window.graphEditor.counters.antenna, num + 1);
-              break;
-            case 'user':
-              window.graphEditor.counters.user = Math.max(window.graphEditor.counters.user, num + 1);
-              break;
-            case 'server':
-              window.graphEditor.counters.server = Math.max(window.graphEditor.counters.server, num + 1);
-              break;
-            case 'client':
-              window.graphEditor.counters.client = Math.max(window.graphEditor.counters.client, num + 1);
-              break;
-            case 'vm':
-              window.graphEditor.counters.vm = Math.max(window.graphEditor.counters.vm, num + 1);
-              break;
-            case 'storage':
-              window.graphEditor.counters.storage = Math.max(window.graphEditor.counters.storage, num + 1);
-              break;
-            case 'network':
-              window.graphEditor.counters.network = Math.max(window.graphEditor.counters.network, num + 1);
-              break;
+          const counterMap = {
+            'router': 'router', 'antenna': 'antenna', 'user': 'user', 'server': 'server',
+            'client': 'client', 'vm': 'vm', 'storage': 'storage', 'network': 'network'
+          };
+          const counterKey = counterMap[type];
+          if (counterKey) {
+            window.graphEditor.counters[counterKey] = Math.max(window.graphEditor.counters[counterKey], num + 1);
           }
         }
       });
       
-      // Also update edge counter
       window.cy.edges().forEach(edge => {
         const id = edge.id();
         const match = id.match(/E(\d+)/);
@@ -313,42 +263,27 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
       
-      // Fit the graph in the viewport
       window.cy.fit();
       
-      // Make sure the createNewLevelBtn stays visible
       const createNewLevelBtn = document.getElementById("createNewLevelBtn");
       if (createNewLevelBtn) {
         createNewLevelBtn.style.display = "block";
       }
       
-      // Update UI to match the loaded graph's mode (add/remove buttons)
       const mode = graph.mode;
       const editorButtonsContainer = document.querySelector(".editor-buttons");
       if (editorButtonsContainer) {
-        // Remove existing dynamic buttons and antenna toggle
         const existingButtons = document.querySelectorAll(".dynamic-button");
         existingButtons.forEach(button => button.remove());
-        
         const existingToggles = document.querySelectorAll(".antenna-toggle-container");
         existingToggles.forEach(toggle => toggle.remove());
         
-        // Add buttons for the graph's mode
         const modeButtons = {
-          "RV": [
-            { text: "Ajouter Routeur", action: "ajouter-routeur" },
-            { text: "Ajouter utilisateur", action: "ajouter-utilisateur" },
-            { text: "Ajouter antenne", action: "ajouter-antenne" }
-          ],
-          "SC": [
-            { text: "Ajouter utilisateur", action: "ajouter-utilisateur" },
-            { text: "Ajouter antenne", action: "ajouter-antenne" }
-          ],
-          "Cloud": [
-          ]
+          "RV": [ { text: "Ajouter Routeur", action: "ajouter-routeur" }, { text: "Ajouter utilisateur", action: "ajouter-utilisateur" }, { text: "Ajouter antenne", action: "ajouter-antenne" } ],
+          "SC": [ { text: "Ajouter utilisateur", action: "ajouter-utilisateur" }, { text: "Ajouter antenne", action: "ajouter-antenne" } ],
+          "Cloud": []
         };
         
-        // Add buttons for the selected mode
         if (modeButtons[mode]) {
           modeButtons[mode].forEach(item => {
             const button = document.createElement("button");
@@ -359,7 +294,6 @@ document.addEventListener("DOMContentLoaded", () => {
           });
         }
         
-        // Add antenna consumption toggle if needed
         if (mode === "RV" || mode === "SC") {
           if (window.graphEditor && window.graphEditor.createAntennaConsumptionToggle) {
             window.graphEditor.createAntennaConsumptionToggle();
@@ -369,7 +303,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if(mode === "RV"){
           if (window.graphEditor && window.graphEditor.addGlobalCapacityButton) {
             setTimeout(window.graphEditor.addGlobalCapacityButton, 100);
-        }
+          }
         }
       }
       addSaveButton();
@@ -381,38 +315,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
   
-  /**
-   * Fetch all graphs for a specific mode
-   * @param {string} mode - Mode to filter graphs by (RV, SC, Cloud)
-   * @returns {Promise<Object>} - Result containing the graphs
-   */
   window.graphPersistence.fetchGraphs = async function(mode) {
     try {
       const response = await fetch(`${API_URL}?mode=${mode}`);
-      
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      
-      const result = await response.json();
-      return result;
+      return await response.json();
     } catch (error) {
       console.error("Error fetching graphs:", error);
       return { success: false, message: error.message, data: [] };
     }
   };
   
-  /**
-   * Delete a graph by ID
-   * @param {string} graphId - ID of the graph to delete
-   * @returns {Promise<Object>} - Result of the delete operation
-   */
   window.graphPersistence.deleteGraph = async function(graphId) {
     try {
-      const response = await fetch(`${API_URL}/${graphId}`, {
-        method: 'DELETE'
-      });
-      
+      const response = await fetch(`${API_URL}/${graphId}`, { method: 'DELETE' });
       return await response.json();
     } catch (error) {
       console.error("Error deleting graph:", error);
@@ -420,25 +338,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
   
-
   window.graphPersistence.updateCourseContent = async function(graphId, courseContent) {
     try {
-      // Call the API to update just the course content
       const response = await fetch(`${API_URL}/${graphId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ courseContent })
       });
-      
       const result = await response.json();
-      
       if (result.success) {
-        console.log("Course content updated successfully:", result.data);
         return { success: true, data: result.data };
       } else {
-        console.error("Failed to update course content:", result.message);
         return { success: false, message: result.message };
       }
     } catch (error) {
@@ -447,20 +357,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
   
-
-  // Add a save button to the editor when it's initialized
   function addSaveButton() {
-    console.log('Adding save button to editor');
     const editorButtonsContainer = document.querySelector(".editor-buttons");
     if (editorButtonsContainer && !document.getElementById("saveGraphBtn")) {
       const saveBtn = document.createElement("button");
       saveBtn.id = "saveGraphBtn";
       saveBtn.textContent = "Enregistrer le graphe";
       saveBtn.addEventListener("click", () => {
-        // Prompt for graph name
-        const name = prompt("Enter a name for this graph:", 
-          `Graph_${window.graphEditor.activeMode}_${new Date().toISOString().slice(0, 10)}`);
-        
+        const name = prompt("Enter a name for this graph:", `Graph_${window.graphEditor.activeMode}_${new Date().toISOString().slice(0, 10)}`);
         if (name) {
           window.graphPersistence.saveGraph(name)
             .then(result => {
@@ -472,32 +376,19 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
       });
-      
       editorButtonsContainer.appendChild(saveBtn);
     }
   }
   
-  const createNewLevelBtn = document.getElementById("createNewLevelBtn");
-  if (createNewLevelBtn) {
-    createNewLevelBtn.addEventListener('click', function() {
-      // Add save button once the editor is initialized
-      setTimeout(addSaveButton, 500);
-    });
-  }
-  
-  // Function to check connectivity and display server information
   function displayServerInfo() {
     const container = document.createElement('div');
     container.id = 'server-info';
     container.style.cssText = 'position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 8px; border-radius: 4px; font-size: 12px; max-width: 300px;';
-    
     const addressDisplay = document.createElement('div');
     addressDisplay.textContent = 'Server: Detecting...';
     container.appendChild(addressDisplay);
-    
     document.body.appendChild(container);
     
-    // Try to get server info
     fetch(`${API_BASE}/api/serverinfo`)
       .then(response => response.json())
       .then(data => {
@@ -510,8 +401,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
   
-  // Display server info after a short delay
   setTimeout(displayServerInfo, 1000);
-
   window.addSaveButton = addSaveButton;
 });

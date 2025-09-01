@@ -13,8 +13,8 @@
     <!-- Level Selection Section (shown first) -->
     <div id="level-selection" class="level-selection">
         <header>
-            <h1>Set Cover - Select a Level</h1>
-            <button id="backHomeBtn" class="secondary-button">Back to Home</button>
+            <h1>Set Cover - Choisissez un Niveau</h1>
+            <button id="backHomeBtn" class="secondary-button">Accueil</button>
         </header>
         
         <div id="graphListContainer" class="graph-list-container">
@@ -29,24 +29,31 @@
         <!-- Barre de navigation fixe en haut à gauche -->
         <div class="left-panel">
             <div class="navigation-bar">
-                <button id="resetBtn">Reset</button>
+                <button id="resetBtn">Recommencer le niveau</button>
                 <button id="returnToLevelsBtn">Sélectionner un autre niveau</button>
                 <button id="homeBtn">Accueil</button>
             </div>
 
             <!-- NEW: Tools Panel below navigation -->
             <div class="tools-panel">
-                <button id="resetViewBtn" class="tool-button" title="Reset graph view (fit to screen)">
-                    <i class="fas fa-expand-arrows-alt"></i> <!-- Optional icon -->
-                    Reset View
+
+
+                <button id="applyGreedyBtn" class="tool-button" title="Apply greedy algorithm solution">
+                    <i class="fas fa-fast-forward"></i>
+                    Solution Gloutonne
                 </button>
-                <button id="applyOptimalBtn" class="tool-button" title="Apply saved optimal solution">
+                <button id="applyOptimalBtn" class="tool-button" title="Apply saved optimal solution" style="margin-bottom: 20px;">
                     <i class="fas fa-star"></i>
                     Solution optimale
                 </button>
-                <button id="showCourseBtn" class="tool-button" title="Show course content">
+                <button id="showCourseBtn" class="tool-button" title="Show course content" style="margin-bottom: 20px;">
                     <i class="fas fa-book-open"></i>
                     Cours (infos)
+                </button>
+
+                <button id="resetViewBtn" class="tool-button" title="Reset graph view (fit to screen)">
+                    <i class="fas fa-expand-arrows-alt"></i>
+                    Centrer la vue
                 </button>
             </div>
         </div>
@@ -76,8 +83,8 @@
                                 <i class="fas fa-bolt"></i>
                             </div>
                             <div class="stats-info">
-                                <div class="stats-label">Antennes Actives</div>
-                                <div class="stats-value"><span id="active-antennas">0</span>/<span id="total-antennas">0</span></div>
+                                <div class="stats-label">Consommation actuelle</div>
+                                <div class="stats-value"><span id="consumption">0</span> W</div>
                             </div>
                         </div>
                     </div>
@@ -91,9 +98,9 @@
                             <div id="consumption-gauge" class="gauge-fill inactive"></div>
                         </div>
                         <div class="gauge-markers">
-                            <span>Faible économie</span>
-                            <span>Économie moyenne</span>
-                            <span>Grande économie</span>
+                            <span>Faible</span>
+                            <span>Moyenne</span>
+                            <span>Élevée</span>
                         </div>
                     </div>
                 </div>

@@ -13,8 +13,8 @@
     <!-- Level Selection Section (shown first) -->
     <div id="level-selection" class="level-selection">
         <header>
-            <h1>Green Networks - Select a Level</h1>
-            <button id="backHomeBtn" class="secondary-button">Back to Home</button>
+            <h1>Réseaux Verts - Choisissez un niveau</h1>
+            <button id="backHomeBtn" class="secondary-button">Accueil</button>
         </header>
         
         <div id="graphListContainer" class="graph-list-container">
@@ -30,20 +30,17 @@
         <div class="left-panel">
             <div class="navigation-bar">
                 <button id="homeBtn">Accueil</button>
-                <button id="resetBtn">Reset</button>
+                <button id="resetBtn">Recommencer le niveau</button>
                 <button id="returnToLevelsBtn">Sélectionner un autre niveau</button>
                 
             </div>
 
             <!-- NEW: Tools Panel below navigation -->
             <div class="tools-panel">
-                <button id="resetViewBtn" class="tool-button" title="Reset graph view (fit to screen)">
-                    <i class="fas fa-expand-arrows-alt"></i>
-                    Repositionner
-                </button>
+
                 <button id="findAllPathsBtn" class="tool-button" title="Connect all user pairs via shortest paths">
                     <i class="fas fa-route"></i>
-                    Solution plus court chemin
+                    Solution plus courts chemins
                 </button>
                 <button id="findNextPathBtn" class="tool-button" title="Connect next user pair via shortest path">
                     <i class="fas fa-shoe-prints"></i>
@@ -53,9 +50,21 @@
                     <i class="fas fa-star"></i>
                     Solution optimale
                 </button>
-                <button id="showCourseBtn" class="tool-button" title="Show course content">
+                
+
+                <button id="toggleCapacityBtn" class="tool-button" title="Afficher/Masquer les capacités des routes" style="margin-bottom: 20px;">
+                    <i class="fas fa-tag"></i>
+                    Afficher Capacités
+                </button>
+
+                <button id="showCourseBtn" class="tool-button" title="Show course content" style="margin-bottom: 20px;">
                     <i class="fas fa-book-open"></i>
                     Cours (infos)
+                </button>
+
+                <button id="resetViewBtn" class="tool-button" title="Reset graph view (fit to screen)">
+                    <i class="fas fa-expand-arrows-alt"></i>
+                    Centrer la vue
                 </button>
             </div>
 
@@ -102,9 +111,9 @@
                             <div id="consumption-gauge" class="gauge-fill"></div>
                         </div>
                         <div class="gauge-markers">
-                            <span>Faible économie</span>
-                            <span>Économie moyenne</span>
-                            <span>Grande économie</span>
+                            <span>Faible</span>
+                            <span>Moyenne</span>
+                            <span>Élevée</span>
                         </div>
                     </div>
                 </div>

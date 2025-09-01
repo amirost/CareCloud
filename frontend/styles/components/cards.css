@@ -92,8 +92,8 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     text-align: center;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    width: 250px;
-    height: 350px;
+    width: 350px;
+    height: 450px;
   }
   
   .mini-game-RV:hover, 

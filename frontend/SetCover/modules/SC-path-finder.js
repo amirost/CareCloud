@@ -1,328 +1,240 @@
 // SC-path-finder.js - Handles automated antenna optimization for the SC game
 
+import { setHaloVisibility } from './SC-styles.js';
+
 export function initPathFinder(gameState, uiManager) {
     return {
-        // Set up event listeners for path-finder buttons
+        // Met en place les écouteurs d'événements pour les boutons
         setupPathFinderButtons() {
-            // Apply optimal solution button
+            // Bouton pour la solution optimale SAUVEGARDÉE
             const applyOptimalBtn = document.getElementById('applyOptimalBtn');
             if (applyOptimalBtn) {
                 applyOptimalBtn.addEventListener('click', () => {
                     this.applyOptimalSolution();
                 });
-                console.log("Optimal solution button initialized");
+                console.log("Optimal solution button initialized for SC");
             } else {
-                console.warn("Optimal solution button not found");
+                console.warn("Button with ID 'applyOptimalBtn' not found.");
+            }
+
+            // Bouton pour la solution GLOUTONNE
+            const applyGreedyBtn = document.getElementById('applyGreedyBtn');
+            if (applyGreedyBtn) {
+                applyGreedyBtn.addEventListener('click', () => {
+                    this.applyGreedySolution();
+                });
+                console.log("Greedy solution button initialized for SC");
+            } else {
+                console.warn("Button with ID 'applyGreedyBtn' not found.");
             }
         },
         
-        // Apply the saved optimal solution if one exists
+        // Applique la solution optimale SAUVEGARDÉE
         applyOptimalSolution() {
-            // Check if a minimum consumption value exists (indicating an optimal solution)
-            if (gameState.minimumConsumption === null || gameState.minimumConsumption === undefined) {
+            if (!gameState.optimalAntennaSet || gameState.optimalAntennaSet.length === 0) {
                 uiManager.showNotification("Aucune solution optimale enregistrée pour ce niveau", "error");
                 return;
             }
             
-            console.log(`Applying optimal solution with consumption: ${gameState.minimumConsumption}`);
+            const savedMinimumConsumption = gameState.minimumConsumption;
             
-            // Start by resetting the game
             if (gameState.gamePhases && gameState.gamePhases.resetGame) {
                 gameState.gamePhases.resetGame();
             }
+            gameState.applyingSolution = true;
+            gameState.minimumConsumption = savedMinimumConsumption;
+
+            const optimalAntennas = new Set(gameState.optimalAntennaSet);
+            this.applyAntennaSet(optimalAntennas);
             
-            // First activate all antennas and make sure we have an initial state
-            this.activateAllAntennas();
+            uiManager.showNotification("Solution optimale appliquée avec succès!", "success");
             
-            // Then try to determine which antennas must be turned on to cover all users
-            this.findMinimalAntennaSet();
-            
-            // Compare current consumption with minimum consumption
-            const currentConsumption = this.getCurrentConsumption();
-            console.log(`Current consumption: ${currentConsumption}, Target: ${gameState.minimumConsumption}`);
-            
-            // Check if we've achieved the optimal consumption
-            if (Math.abs(currentConsumption - gameState.minimumConsumption) < 0.01) {
-                uiManager.showNotification("Solution optimale appliquée avec succès!", "success");
-            } else {
-                uiManager.showNotification("La solution appliquée n'est pas optimale. Des ajustements manuels peuvent être nécessaires.", "warning");
-            }
+            setTimeout(() => {
+                gameState.applyingSolution = false;
+                console.log("Flag 'applyingSolution' set to false.");
+            }, 3000);
         },
         
-        // Activate all antennas as a starting point
-        activateAllAntennas() {
-            gameState.cy.nodes('[type="antenna"]').forEach(antenna => {
-                antenna.data('active', true);
-                
-                // Add to active antennas set
-                gameState.activeAntennas.add(antenna.id());
-                
-                // Update halo visibility
-                const haloId = antenna.data('haloId');
-                if (haloId) {
-                    const haloNode = gameState.cy.getElementById(haloId);
-                    if (haloNode && haloNode.length) {
-                        haloNode.data('active', true);
-                        // Use the imported function if available
-                        if (gameState.gamePhases && gameState.gamePhases.eventHandlers) {
-                            // Try to use the setHaloVisibility function from SC-styles.js
-                            try {
-                                const setHaloVisibility = (halo, visible) => {
-                                    halo.style({
-                                        'background-opacity': visible ? 0.1 : 0,
-                                        'opacity': visible ? 0.5 : 0,
-                                        'visibility': visible ? 'visible' : 'hidden'
-                                    });
-                                    halo.data('baseOpacity', visible ? 0.1 : 0);
-                                };
-                                setHaloVisibility(haloNode, true);
-                            } catch (error) {
-                                console.error("Error setting halo visibility:", error);
-                            }
-                        }
-                    }
+        // Applique la solution GLOUTONNE calculée
+        applyGreedySolution() {
+            
+            const savedMinimumConsumption = gameState.minimumConsumption;
+            const minimalAntennaSet = this.calculateGreedySet();
+            
+            if (!minimalAntennaSet || minimalAntennaSet.size === 0) {
+                uiManager.showNotification("L'algorithme glouton n'a trouvé aucune solution.", "error");
+                gameState.applyingSolution = false;
+                return;
+            }
+            
+            if (gameState.gamePhases && gameState.gamePhases.resetGame) {
+                gameState.gamePhases.resetGame();
+            }
+            gameState.applyingSolution = true;
+            gameState.minimumConsumption = savedMinimumConsumption;
+
+            this.applyAntennaSet(minimalAntennaSet);
+            
+            uiManager.showNotification("Solution gloutonne appliquée!", "info");
+            
+            setTimeout(() => {
+                gameState.applyingSolution = false;
+                console.log("Flag 'applyingSolution' set to false.");
+            }, 3000);
+        },
+
+        // Fonction pour appliquer un ensemble d'antennes (factorise le code)
+        applyAntennaSet(antennaSet) {
+            console.log("Applying antenna set:", antennaSet);
+            // Met à jour l'état visuel de chaque antenne
+            gameState.cy.nodes('[type="antenna"]').forEach(antennaNode => {
+                const isActive = antennaSet.has(antennaNode.id());
+                antennaNode.data('active', isActive);
+                if (gameState.gamePhases && gameState.gamePhases.updateAntennaAppearance) {
+                    gameState.gamePhases.updateAntennaAppearance(antennaNode, isActive);
                 }
             });
             
-            // Make sure each user is connected to at least one active antenna
-            gameState.cy.nodes('[type="user"]').forEach(user => {
-                this.connectUserToNearestAntenna(user);
-            });
+            // Met à jour l'état global
+            gameState.activeAntennas = antennaSet;
             
-            // Update stats
+            // Reconnecte les utilisateurs en suivant la nouvelle logique de densité
+            this.reconnectUsersToSet(antennaSet); 
+            
+            // Met à jour les stats et passe à la phase d'optimisation
             uiManager.updateStats();
+            if (gameState.gamePhases) {
+                gameState.gamePhases.startPhase3();
+            }
         },
-        
-        // Connect a user to the nearest antenna
-        connectUserToNearestAntenna(userNode) {
-            // Get user position
-            const userPos = userNode.position();
+
+        // Fonction de calcul de l'algorithme glouton (Set Cover)
+        calculateGreedySet() {
+            console.log("Starting greedy algorithm calculation...");
             
-            // Find nearest active antenna
-            let nearestAntenna = null;
-            let shortestDistance = Infinity;
-            
-            gameState.cy.nodes('[type="antenna"][active]').forEach(antenna => {
-                const antennaPos = antenna.position();
-                const radius = antenna.data('radius') || 50;
-                
-                // Calculate distance between user and antenna
-                const distance = Math.sqrt(
-                    Math.pow(userPos.x - antennaPos.x, 2) + 
-                    Math.pow(userPos.y - antennaPos.y, 2)
-                );
-                
-                // Check if user is in range of this antenna
-                if (distance <= radius && distance < shortestDistance) {
-                    shortestDistance = distance;
-                    nearestAntenna = antenna;
-                }
-            });
-            
-            // If no antenna is in range, we can't connect this user
-            if (!nearestAntenna) {
-                console.error(`No active antenna in range for user ${userNode.id()}`);
-                return false;
+            if (!gameState.eventHandlers || !gameState.eventHandlers.canAntennaReachUser) {
+                console.error("Greedy Error: 'canAntennaReachUser' is missing.");
+                return null;
             }
+
+            // 1. Définir l'univers des utilisateurs à couvrir
+            const usersToCover = new Set(gameState.cy.nodes('[type="user"]').map(u => u.id()));
+            const selectedAntennas = new Set();
             
-            // Connect user to the nearest antenna with a virtual edge
-            const edgeId = `virtual-edge-${userNode.id()}-${nearestAntenna.id()}`;
-            
-            // Check if the edge already exists
-            const existingEdge = gameState.cy.getElementById(edgeId);
-            if (existingEdge.length > 0) {
-                return true; // Already connected
-            }
-            
-            // Get a user color from a pre-defined list or generate one
-            const colorIndex = parseInt(userNode.id().match(/\d+/)[0]) % gameState.userColors.length;
-            const color = gameState.userColors[colorIndex];
-            
-            // Create a virtual edge
-            gameState.cy.add({
-                group: 'edges',
-                data: {
-                    id: edgeId,
-                    source: userNode.id(),
-                    target: nearestAntenna.id(),
-                    virtual: true
-                },
-                style: {
-                    'line-color': color,
-                    'width': 3
-                }
-            });
-            
-            // Mark the user as connected
-            gameState.connectedUsers.add(userNode.id());
-            
-            // Add this user to the antenna's coverage list
-            if (!gameState.antennaUsers.has(nearestAntenna.id())) {
-                gameState.antennaUsers.set(nearestAntenna.id(), new Set());
-            }
-            gameState.antennaUsers.get(nearestAntenna.id()).add(userNode.id());
-            
-            return true;
-        },
-        
-        // Find a minimal set of antennas that cover all users
-        findMinimalAntennaSet() {
-            // First, we need to determine which users are covered by which antennas
-            const userCoverage = new Map(); // Maps user IDs to sets of antenna IDs
-            
-            // Calculate all the antennas that can reach each user
-            gameState.cy.nodes('[type="user"]').forEach(user => {
-                const userId = user.id();
-                const userPos = user.position();
-                
-                // Create a set to hold antennas that cover this user
-                userCoverage.set(userId, new Set());
-                
-                // Check which antennas cover this user
-                gameState.cy.nodes('[type="antenna"]').forEach(antenna => {
-                    const antennaPos = antenna.position();
-                    const radius = antenna.data('radius') || 50;
-                    
-                    // Calculate distance between user and antenna
-                    const distance = Math.sqrt(
-                        Math.pow(userPos.x - antennaPos.x, 2) + 
-                        Math.pow(userPos.y - antennaPos.y, 2)
-                    );
-                    
-                    // Check if user is in range of this antenna
-                    if (distance <= radius) {
-                        userCoverage.get(userId).add(antenna.id());
+            // 2. Calculer la portée potentielle de chaque antenne une bonne fois pour toutes
+            const antennaCoverageMap = new Map();
+            gameState.cy.nodes('[type="antenna"]').forEach(antenna => {
+                const usersInRange = new Set();
+                gameState.cy.nodes('[type="user"]').forEach(user => {
+                    if (gameState.eventHandlers.canAntennaReachUser(antenna, user)) {
+                        usersInRange.add(user.id());
                     }
                 });
+                antennaCoverageMap.set(antenna.id(), usersInRange);
             });
-            
-            // Now we need to find a minimum set of antennas that cover all users
-            // We'll use a greedy algorithm: 
-            // At each step, pick the antenna that covers the most uncovered users
-            
-            const usersToConnect = new Set(userCoverage.keys()); // All users that need to be covered
-            const selectedAntennas = new Set(); // Antennas we select to keep active
-            
-            // Keep selecting antennas until all users are covered
-            while (usersToConnect.size > 0) {
-                // Find the antenna that covers the most uncovered users
-                let bestAntenna = null;
-                let bestCoverage = 0;
+
+            // 3. Boucle principale de l'algorithme
+            while (usersToCover.size > 0) {
+                let bestAntennaId = null;
+                let maxNewUsersCovered = -1;
+
+                // 3a. Trouver l'antenne qui couvre le plus d'utilisateurs NON ENCORE couverts
+                antennaCoverageMap.forEach((usersInRange, antennaId) => {
+                    if (selectedAntennas.has(antennaId)) return;
+
+                    const newCoverage = new Set([...usersInRange].filter(userId => usersToCover.has(userId)));
+                    
+                    if (newCoverage.size > maxNewUsersCovered) {
+                        maxNewUsersCovered = newCoverage.size;
+                        bestAntennaId = antennaId;
+                    }
+                });
+
+                // 3b. Gérer le cas où aucune solution n'est possible
+                if (bestAntennaId === null) {
+                    console.error("Greedy Error: Could not cover all users. Remaining:", Array.from(usersToCover));
+                    break; 
+                }
+
+                // 3c. Sélectionner la meilleure antenne et mettre à jour les utilisateurs couverts
+                selectedAntennas.add(bestAntennaId);
+                const usersNowCovered = antennaCoverageMap.get(bestAntennaId);
+                usersNowCovered.forEach(userId => usersToCover.delete(userId));
                 
-                gameState.cy.nodes('[type="antenna"]').forEach(antenna => {
-                    const antennaId = antenna.id();
-                    
-                    // Count how many uncovered users this antenna would cover
-                    let coverageCount = 0;
-                    
-                    usersToConnect.forEach(userId => {
-                        if (userCoverage.get(userId).has(antennaId)) {
-                            coverageCount++;
-                        }
-                    });
-                    
-                    // Check if this is the best antenna so far
-                    if (coverageCount > bestCoverage) {
-                        bestCoverage = coverageCount;
-                        bestAntenna = antenna;
+                console.log(`Greedy Step: Chose ${bestAntennaId}, covered ${maxNewUsersCovered} new users. Left: ${usersToCover.size}`);
+            }
+            
+            return selectedAntennas;
+        },
+        
+        // Reconnecte les utilisateurs à un ensemble d'antennes en se basant sur la DENSITÉ
+        reconnectUsersToSet(activeAntennaSet) {
+            // Nettoyage initial
+            gameState.cy.edges('[virtual]').remove();
+            gameState.connectedUsers.clear();
+            gameState.antennaUsers.clear();
+            
+            if (!gameState.eventHandlers || !gameState.eventHandlers.canAntennaReachUser) {
+                console.error("Reconnect Error: 'canAntennaReachUser' is missing.");
+                return;
+            }
+
+            // Étape 1 : Pré-calculer la "valeur" de chaque antenne active (combien d'utilisateurs elle couvre au total)
+            const antennaUserCount = new Map();
+            activeAntennaSet.forEach(antennaId => {
+                const antennaNode = gameState.cy.getElementById(antennaId);
+                if (antennaNode.length === 0) return;
+
+                let count = 0;
+                gameState.cy.nodes('[type="user"]').forEach(userNode => {
+                    if (gameState.eventHandlers.canAntennaReachUser(antennaNode, userNode)) {
+                        count++;
+                    }
+                });
+                antennaUserCount.set(antennaId, count);
+            });
+            console.log("Antenna density calculated:", antennaUserCount);
+
+            // Étape 2 : Pour chaque utilisateur, trouver sa meilleure antenne en se basant sur la "valeur" calculée.
+            gameState.cy.nodes('[type="user"]').forEach(userNode => {
+                const userId = userNode.id();
+                let bestAntennaId = null;
+                let maxUsersInBestAntenna = -1;
+
+                // Trouver toutes les antennes actives à portée de cet utilisateur
+                const availableAntennas = [];
+                activeAntennaSet.forEach(antennaId => {
+                    const antennaNode = gameState.cy.getElementById(antennaId);
+                    if (antennaNode.length > 0 && gameState.eventHandlers.canAntennaReachUser(antennaNode, userNode)) {
+                        availableAntennas.push(antennaId);
+                    }
+                });
+
+                // Parmi ces antennes disponibles, choisir celle qui a la plus grande "valeur" (densité)
+                availableAntennas.forEach(antennaId => {
+                    const userCount = antennaUserCount.get(antennaId) || 0;
+                    if (userCount > maxUsersInBestAntenna) {
+                        maxUsersInBestAntenna = userCount;
+                        bestAntennaId = antennaId;
                     }
                 });
                 
-                // If we found a good antenna, select it
-                if (bestAntenna && bestCoverage > 0) {
-                    const antennaId = bestAntenna.id();
-                    selectedAntennas.add(antennaId);
-                    
-                    // Remove the covered users from the list of users to connect
-                    usersToConnect.forEach(userId => {
-                        if (userCoverage.get(userId).has(antennaId)) {
-                            usersToConnect.delete(userId);
-                        }
-                    });
+                // Étape 3 : Connecter l'utilisateur à la meilleure antenne trouvée
+                if (bestAntennaId) {
+                    const color = userNode.style('background-color');
+                    if (gameState.eventHandlers.createVirtualConnection) {
+                       gameState.eventHandlers.createVirtualConnection(userId, bestAntennaId, color);
+                    }
+
+                    gameState.connectedUsers.add(userId);
+                    if (!gameState.antennaUsers.has(bestAntennaId)) {
+                        gameState.antennaUsers.set(bestAntennaId, new Set());
+                    }
+                    gameState.antennaUsers.get(bestAntennaId).add(userId);
                 } else {
-                    // No antenna can cover the remaining users, this shouldn't happen
-                    console.error("Could not find antennas to cover all users");
-                    break;
-                }
-            }
-            
-            // Now, turn off all antennas that weren't selected
-            gameState.cy.nodes('[type="antenna"]').forEach(antenna => {
-                const antennaId = antenna.id();
-                
-                if (!selectedAntennas.has(antennaId)) {
-                    // Turn off this antenna
-                    antenna.data('active', false);
-                    gameState.activeAntennas.delete(antennaId);
-                    
-                    // Also update the halo visibility
-                    const haloId = antenna.data('haloId');
-                    if (haloId) {
-                        const haloNode = gameState.cy.getElementById(haloId);
-                        if (haloNode && haloNode.length) {
-                            haloNode.data('active', false);
-                            // Try to use the setHaloVisibility function
-                            try {
-                                const setHaloVisibility = (halo, visible) => {
-                                    halo.style({
-                                        'background-opacity': visible ? 0.1 : 0,
-                                        'opacity': visible ? 0.5 : 0,
-                                        'visibility': visible ? 'visible' : 'hidden'
-                                    });
-                                    halo.data('baseOpacity', visible ? 0.1 : 0);
-                                };
-                                setHaloVisibility(haloNode, false);
-                            } catch (error) {
-                                console.error("Error setting halo visibility:", error);
-                            }
-                        }
-                    }
+                    console.warn(`User ${userId} could not be connected to any antenna in the provided set.`);
                 }
             });
-            
-            // Remove any virtual connections to turned-off antennas
-            gameState.cy.edges('[virtual]').forEach(edge => {
-                const targetId = edge.target().id();
-                const antennaNode = gameState.cy.getElementById(targetId);
-                
-                // If the target is an antenna and it's inactive, remove this edge
-                if (antennaNode && antennaNode.data('type') === 'antenna' && antennaNode.data('active') === false) {
-                    edge.remove();
-                }
-            });
-            
-            // Reconnect users to their nearest active antennas
-            gameState.cy.nodes('[type="user"]').forEach(user => {
-                // Remove existing connections first
-                gameState.cy.edges().filter(edge => 
-                    edge.data('virtual') && edge.source().id() === user.id()
-                ).remove();
-                
-                // Remove user from connectedUsers set
-                gameState.connectedUsers.delete(user.id());
-                
-                // Connect user to nearest active antenna
-                this.connectUserToNearestAntenna(user);
-            });
-            
-            // Update stats
-            uiManager.updateStats();
-        },
-        
-        // Calculate current consumption
-        getCurrentConsumption() {
-            let totalConsumption = 0;
-            
-            // Add consumption from active antennas only
-            if (gameState.cy) {
-                gameState.cy.nodes('[type="antenna"]').forEach(antenna => {
-                    if (antenna.data('active') !== false) {
-                        totalConsumption += antenna.data('consumption') || 100;
-                    }
-                });
-            }
-            
-            return totalConsumption;
         }
     };
 }

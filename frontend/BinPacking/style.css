@@ -1,0 +1,518 @@
+/* --- VARIABLES DE COULEUR --- */
+:root {
+    --bg-main: #1a1a2e;
+    --container-main: #16213e;
+    --container-secondary: #0f3460;
+    --text-main: #e0e0e0;
+    --accent-action: #e94560;
+    --accent-success: #2ecc71;
+    --accent-info: #3498db;
+    --accent-perf: #9b59b6;
+    --accent-secondary: #f39c12;
+    --grid-line: #334155;
+}
+
+/* --- STYLE GÉNÉRAL --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+body {
+    font-family: 'Roboto', 'Segoe UI', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+#game-container {
+    width: 100%;
+    max-width: 1400px;
+    background-color: var(--container-main);
+    border: 1px solid var(--container-secondary);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--container-secondary);
+    padding-bottom: 15px;
+}
+header h1 {
+    color: var(--accent-info);
+    font-weight: 300;
+}
+
+/* --- STRUCTURE DE LAYOUT --- */
+#main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+#game-body {
+    display: flex;
+    gap: 20px;
+}
+
+/* --- PANNEAU D'INFORMATION HORIZONTAL --- */
+#info-panel {
+    background-color: var(--container-secondary);
+    border-radius: 8px;
+    padding: 15px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.info-block {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.info-block h2 {
+    margin: 0;
+    font-size: 1.2em;
+    color: var(--accent-secondary);
+}
+.info-block p {
+    margin: 0;
+    font-size: 0.9em;
+    color: #ccc;
+}
+#info-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--accent-info);
+    background-color: transparent;
+    color: var(--accent-info);
+    font-size: 1.1em;
+    font-weight: bold;
+    font-family: 'Times New Roman', serif;
+    cursor: pointer;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+#info-btn:hover {
+    background-color: var(--accent-info);
+    color: var(--bg-main);
+}
+#info-btn.hidden {
+    display: none;
+}
+.info-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.info-line strong {
+    color: var(--accent-info);
+}
+
+/* --- JAUGE DE CONSOMMATION --- */
+.gauge {
+    width: 150px;
+    height: 20px;
+    background-color: #1a1a2e;
+    border: 1px solid var(--grid-line);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.gauge-fill {
+    height: 100%;
+    width: 0%;
+    background-color: var(--accent-info);
+    transition: width 0.3s ease-in-out, background-color 0.3s ease;
+}
+#energy-meter.over-limit .gauge-fill {
+    background-color: var(--accent-action);
+}
+#energy-meter.over-limit strong {
+    color: var(--accent-action);
+    animation: pulse-red 1s infinite;
+}
+
+/* --- BARRE LATÉRALE GAUCHE --- */
+#sidebar {
+    width: 320px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+#task-queue-container {
+    background-color: var(--container-secondary);
+    border-radius: 8px;
+    padding: 15px;
+    flex-grow: 1;
+}
+#task-queue-container h2 {
+    margin-bottom: 10px;
+    font-size: 1.2em;
+}
+#task-queue {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    min-height: 50px;
+}
+#task-queue .task-block {
+    width: 60px;
+}
+#controls {
+    background-color: var(--container-secondary);
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* --- ZONE DES SERVEURS DROITE --- */
+.server-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+}
+#servers-area {
+    flex-grow: 1;
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    padding: 20px;
+    background-color: var(--container-secondary);
+    border-radius: 8px;
+    min-height: 600px;
+    height: 600px;
+}
+.server-column {
+    display: flex;
+    flex-direction: column-reverse;
+    width: 120px;
+    border: 2px solid var(--grid-line);
+    background-color: rgba(0, 0, 0, 0.2);
+    position: relative;
+    transition: all 0.2s ease;
+    padding: 0px;
+    background-image: linear-gradient(var(--grid-line) 1px, transparent 1px);
+}
+.server-column.drop-valid {
+    border-color: var(--accent-success);
+    box-shadow: 0 0 15px var(--accent-success);
+}
+.server-column.drop-invalid {
+    border-color: var(--accent-action);
+    box-shadow: 0 0 15px var(--accent-action);
+}
+.server-info {
+    position: absolute;
+    top: 0px;
+    width: 100%;
+    text-align: center;
+    font-size: 0.9em;
+}
+.server-info .name {
+    font-weight: bold;
+}
+.server-info .usage {
+    font-size: 0.8em;
+    color: #aaa;
+}
+.server-consumption {
+    text-align: center;
+    font-size: 0.9em;
+    color: #ccc;
+    margin-top: 10px;
+}
+.server-consumption strong {
+    color: var(--accent-info);
+    font-weight: bold;
+}
+
+/* --- TÂCHES ET CONTRÔLES --- */
+.task-block {
+    width: 100%;
+    cursor: grab;
+    border: 1px solid #000;
+    display: flex;
+    flex-direction: column; 
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    text-shadow: 1px 1px 2px #000;
+    transition: all 0.2s ease;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.2) 1px, transparent 1px);
+    padding: 4px 0;
+}
+.task-block.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+    transform: scale(1.05);
+}
+.task-block.non-draggable {
+    cursor: not-allowed;
+    filter: brightness(0.6);
+}
+#level-selector {
+    display: flex;
+    gap: 8px;
+}
+.level-btn {
+    padding: 8px 12px;
+    border: 1px solid var(--container-secondary);
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.level-btn:hover {
+    background-color: var(--container-secondary);
+    color: var(--accent-info);
+}
+.level-btn.active {
+    background-color: var(--accent-info);
+    color: var(--bg-main);
+    font-weight: bold;
+}
+#reset-btn,
+#execute-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+#reset-btn {
+    background-color: var(--accent-secondary);
+    color: var(--bg-main);
+}
+#reset-btn:hover {
+    filter: brightness(1.2);
+}
+#execute-btn {
+    background-color: var(--accent-action);
+    color: #fff;
+}
+#execute-btn:hover {
+    filter: brightness(1.2);
+}
+#execute-btn:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+}
+
+.switch-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+#algorithm-mode-switch {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--accent-action);
+    transition: .4s;
+    border-radius: 34px;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+input:checked+.slider {
+    background-color: var(--accent-success);
+}
+input:checked+.slider:before {
+    transform: translateX(26px);
+}
+
+/* --- MODALS --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    transition: opacity 0.3s ease;
+}
+.modal-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+#modal-content {
+    background-color: var(--container-main);
+    padding: 30px;
+    border-radius: 8px;
+    border: 1px solid var(--accent-info);
+    text-align: center;
+    box-shadow: 0 0 25px var(--accent-info);
+    min-width: 350px;
+}
+#modal-content h2 {
+    color: var(--accent-success);
+    margin-bottom: 15px;
+}
+#modal-content p {
+    margin-bottom: 25px;
+}
+#modal-content button {
+    padding: 10px 20px;
+    margin: 0 10px;
+    border-radius: 5px;
+    border: none;
+    font-size: 1em;
+    cursor: pointer;
+}
+#modal-next-btn {
+    background-color: var(--accent-success);
+    color: #fff;
+}
+#modal-retry-btn {
+    background-color: var(--accent-secondary);
+    color: #000;
+}
+#modal-content.defeat h2 {
+    color: var(--accent-action);
+    box-shadow: 0 0 25px var(--accent-action);
+}
+#info-modal-overlay {
+    z-index: 1001;
+}
+#info-modal-content {
+    background-color: var(--container-main);
+    padding: 30px 40px;
+    border-radius: 8px;
+    border: 1px solid var(--accent-secondary);
+    box-shadow: 0 0 25px var(--accent-secondary);
+    min-width: 400px;
+    max-width: 550px;
+    position: relative;
+}
+#info-modal-content h2 {
+    color: var(--accent-secondary);
+    margin-bottom: 15px;
+}
+#info-modal-content p {
+    line-height: 1.6;
+    text-align: left;
+}
+#info-modal-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: var(--text-main);
+    font-size: 2em;
+    cursor: pointer;
+}
+
+/* NOUVEAU : Style pour la valeur principale (la charge) */
+.task-charge-value {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+/* NOUVEAU : Style pour l'info de consommation additionnelle */
+.task-consumption-info {
+    font-size: 0.75em;
+    font-weight: normal;
+    opacity: 0.8;
+    color: #f0f0f0;
+}
+
+
+.task-block.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+    transform: scale(1.05);
+}
+/* --- ANIMATIONS --- */
+@keyframes pulse-red {
+    0% {
+        filter: brightness(1);
+    }
+    50% {
+        filter: brightness(1.5);
+    }
+    100% {
+        filter: brightness(1);
+    }
+}
+
+/* NOUVEAU : Style pour l'effet d'animation de consommation */
+.consumption-effect {
+    position: absolute;
+    width: 100%; /* Prend la largeur de la colonne */
+    background: linear-gradient(to top, rgba(255, 255, 255, 0.7), rgba(255, 255, 180, 0.9));
+    border-radius: 2px;
+    z-index: 10;
+    pointer-events: none; /* Pour ne pas intercepter la souris */
+    animation: disintegrate 0.5s ease-out forwards;
+    transform-origin: bottom; /* L'animation partira du bas de l'effet */
+}
+
+@keyframes disintegrate {
+    from {
+        opacity: 1;
+        transform: scaleY(1);
+    }
+    to {
+        opacity: 0;
+        /* L'effet rétrécit, monte et disparaît */
+        transform: scaleY(0) translateY(-40px);
+    }
+}

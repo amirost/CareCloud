@@ -1,4 +1,3 @@
-/* SC (Set Cover) specific game styles */
 
 /* User items container */
 .user-items-container {
@@ -31,6 +30,18 @@
     border-left-color: var(--color-success);
   }
   
+  .user-item.is-connected {
+    background-color: rgba(255, 255, 255, 0.9); /* Fond presque blanc */
+    color: #333; /* Texte sombre pour la lisibilité */
+  }
+  /* On doit aussi ajuster la couleur du texte des enfants */
+  .user-item.is-connected .user-info {
+    color: #333;
+  }
+  .user-item.is-connected .user-status.connected {
+    color: #2E7D32; /* Un vert plus foncé pour contraster sur le blanc */
+  }
+
   .user-item.selected {
     border-left-color: var(--color-accent);
     background-color: rgba(255, 255, 255, 0.15);

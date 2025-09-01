@@ -32,8 +32,8 @@ startPhase1() {
     }
     
     // Update popup message
-    uiManager.setPopupMessage("Sélectionez un utilisateur pour commencer une connexion");
-    
+    uiManager.setPopupMessage("Sélectionez un utilisateur <img src='../../../icons/user_icon.png' class='inline-icon' > pour commencer une connexion");
+
     // Highlight ALL unconnected users (not just from next pair)
     gameState.userPairs.forEach(pair => {
         if (!pair.connected) {
@@ -127,23 +127,17 @@ resetPair(pairIndex) {
     }
     
     const pair = gameState.userPairs[pairIndex];
-    console.log(`Completely resetting pair ${pairIndex}: ${pair.users.join(', ')} with color ${pair.color}`);
-    
-    // Get the pair's color
     const pairColor = pair.color;
+    console.log(`Completely resetting pair ${pairIndex}: ${pair.users.join(', ')} with color ${pairColor}`);
     
-    // STEP 1: Reset the pair data
-    // -------------------------------
-    // Mark the pair as not connected
+    
+    // STEP 1: Reset the pair's high-level state.
+    // ------------------------------------------------------------------
     pair.connected = false;
-    
-    // Remove users from connectedUsers
     pair.users.forEach(userId => {
         gameState.connectedUsers.delete(userId);
         console.log(`Removed ${userId} from connected users list`);
     });
-    
-    // If this was the active pair, clear selection state
     if (gameState.currentUserPair === pairIndex) {
         console.log(`Clearing active pair state`);
         gameState.selectedUser = null;
@@ -151,27 +145,31 @@ resetPair(pairIndex) {
         gameState.currentUserPair = null;
         gameState.currentPath = null;
     }
+
+    // NOUVELLE ÉTAPE : Nettoyer `completedPaths`
+    // ------------------------------------------------------------------
+    const initialCompletedPathsCount = gameState.completedPaths.length;
+    gameState.completedPaths = gameState.completedPaths.filter(pathData => pathData.color !== pairColor);
+    if (gameState.completedPaths.length < initialCompletedPathsCount) {
+        console.log(`Removed path with color ${pairColor} from gameState.completedPaths.`);
+    }
     
-    // STEP 2: Remove visual elements
-    // -------------------------------
-    // Find all virtual edges connected to these users (antenna connections)
+    // STEP 2: Remove user-to-antenna virtual edges.
+    // ------------------------------------------------------------------
     console.log(`Finding user-antenna connections for pair ${pairIndex}`);
     pair.users.forEach(userId => {
         const userEdges = gameState.cy.edges().filter(edge => 
             edge.data('virtual') && (edge.source().id() === userId || edge.target().id() === userId)
         );
-        
         console.log(`Found ${userEdges.length} virtual edges for user ${userId}`);
         userEdges.remove();
     });
     
-    // STEP 3: Clear color from usedLinks and remove related visualizations
-    // --------------------------------------------------------------------
-    console.log(`Removing color ${pairColor} from all usedLinks`);
+    // STEP 3: Clean the `usedLinks` data structure.
+    // ------------------------------------------------------------------
+    console.log(`Removing color ${pairColor} from all usedLinks arrays`);
     
-    // Define a function to check if a color matches our pair color in any format
     function colorsMatch(color1, color2) {
-        // Create a temporary div to convert color formats
         const tempDiv = document.createElement('div');
         tempDiv.style.color = color1;
         document.body.appendChild(tempDiv);
@@ -179,94 +177,51 @@ resetPair(pairIndex) {
         tempDiv.style.color = color2;
         const computedColor2 = window.getComputedStyle(tempDiv).color;
         document.body.removeChild(tempDiv);
-        
         return computedColor1 === computedColor2;
     }
     
-    // Create a copy of the keys and entries to avoid modification during iteration
-    const edgesToProcess = [];
-    gameState.usedLinks.forEach((colorList, edgeId) => {
-        edgesToProcess.push([edgeId, colorList]);
-    });
-    
-    edgesToProcess.forEach(([edgeId, colorList]) => {
-        // Check if any color in the list matches our pair color
-        const hasMatchingColor = colorList.some(color => {
-            // Quick check for exact match
-            if (color === pairColor) return true;
-            
-            // Try to match rgb vs hex format
-            if (color.startsWith('rgb') && pairColor.startsWith('#')) {
-                return colorsMatch(color, pairColor);
-            }
-            
-            if (pairColor.startsWith('rgb') && color.startsWith('#')) {
-                return colorsMatch(pairColor, color);
-            }
-            
-            return false;
-        });
-        
-        if (hasMatchingColor) {
-            console.log(`Edge ${edgeId} used color matching ${pairColor}, removing`);
-            
-            // Remove all parallel edges that might visually represent this connection
-            gameState.cy.edges().filter(edge => 
-                (edge.data('parent') === edgeId || edge.id().startsWith(`inner-${edgeId}`))
-            ).remove();
-            
-            // Remove any matching color from the usedLinks entry
-            const newColorList = colorList.filter(color => {
-                // Keep colors that don't match
-                if (color === pairColor) return false;
-                if ((color.startsWith('rgb') && pairColor.startsWith('#')) || 
-                    (pairColor.startsWith('rgb') && color.startsWith('#'))) {
-                    return !colorsMatch(color, pairColor);
-                }
-                return true;
-            });
-            
-            if (newColorList.length === 0) {
-                // No colors left, remove the entry
-                gameState.usedLinks.delete(edgeId);
-                console.log(`Removed edge ${edgeId} from usedLinks (no colors left)`);
-            } else {
-                // Update with filtered list
+    // Iterate over every link in the usedLinks map.
+    gameState.usedLinks.forEach((linkInfo, edgeId) => {
+        const colorList = Array.isArray(linkInfo) ? linkInfo : (linkInfo ? linkInfo.colors : null);
+        if (!colorList) return;
+
+        const newColorList = colorList.filter(colorInList => !colorsMatch(colorInList, pairColor));
+
+        if (newColorList.length === 0) {
+            gameState.usedLinks.delete(edgeId);
+        } else {
+            if (Array.isArray(linkInfo)) {
                 gameState.usedLinks.set(edgeId, newColorList);
-                console.log(`Updated colors for edge ${edgeId}: ${newColorList}`);
-                
-                // Recreate the visualization for remaining colors
-                const edge = gameState.cy.getElementById(edgeId);
-                if (edge) {
-                    eventHandlers.updateEdgeVisualization(edge);
-                }
+            } else {
+                linkInfo.colors = newColorList;
+                linkInfo.count = newColorList.length;
             }
         }
     });
+    // Reset edge states
+    gameState.cy.edges().forEach(edge => {
+        edge.data('used', true);
+        edge.removeClass('unused');
+    });
+    // STEP 4: Force a global visual refresh.
+    // ------------------------------------------------------------------
+    if (eventHandlers && eventHandlers.refreshAllEdgeVisuals) {
+        console.log("Triggering global visual refresh.");
+        eventHandlers.refreshAllEdgeVisuals();
+    } else {
+        console.error("La fonction refreshAllEdgeVisuals n'a pas été trouvée ! Visuals may be inconsistent.");
+    }
+
+    // DEBUGGING: Log the final state of usedLinks to confirm it's clean.
+    console.log("State of `usedLinks` after reset logic:", new Map(gameState.usedLinks));
     
-    // STEP 4: Clear any remaining visual elements that might have been missed
-    // ----------------------------------------------------------------------
-    // Just delete all edges that match our color or have parent edges that used this color
-    gameState.cy.edges().filter(edge => {
-        const color = edge.style('line-color');
-        if (color === pairColor) return true;
-        if ((color.startsWith('rgb') && pairColor.startsWith('#')) || 
-            (pairColor.startsWith('rgb') && color.startsWith('#'))) {
-            return colorsMatch(color, pairColor);
-        }
-        return false;
-    }).remove();
-    
-    // Clear any highlighting on nodes
+    // STEP 5: Final UI cleanup and state transition.
+    // ------------------------------------------------------------------
     gameState.cy.nodes().removeClass('selected available');
     
     console.log(`Reset of pair ${pairIndex} complete`);
-    console.log(`Current usedLinks:`, Object.fromEntries(gameState.usedLinks));
     
-    // Update stats
     uiManager.updateStats();
-    
-    // Go back to phase 1
     this.startPhase1();
 },
         
@@ -275,7 +230,7 @@ resetPair(pairIndex) {
             gameState.phase = 2;
             
             // Update popup message
-            uiManager.setPopupMessage("Connectez-le à une antenne proche");
+            uiManager.setPopupMessage("Connectez-le à une antenne <img src='../../../icons/antenna_icon_on.png' class='inline-icon'> proche");
             
             // Highlight antennas that can reach the selected user
             eventHandlers.highlightAvailableAntennas();
@@ -322,7 +277,7 @@ resetPair(pairIndex) {
             gameState.phase = 3;
             
             // Update popup message
-            uiManager.setPopupMessage("Tracez la route en sélectionnant des routeurs jusqu'à connecter l'utilisateur de la même couleur");
+            uiManager.setPopupMessage("Tracez la route en sélectionnant des routeurs <img src='../../../icons/router_icon_white.png' class='inline-icon'> jusqu'à connecter l'utilisateur de la même couleur");
             
             // Store the current path
             gameState.currentPath = {
@@ -430,6 +385,17 @@ resetPair(pairIndex) {
                     }
                 });
                 
+                const fullPath = [
+                    gameState.selectedUser, 
+                    ...gameState.currentPath.route, 
+                    secondUserId
+                ];
+                gameState.completedPaths.push({
+                    color: gameState.selectedUserColor,
+                    path: fullPath
+                });
+                console.log('Saved completed path:', fullPath);
+
                 // Mark the second user as connected
                 gameState.connectedUsers.add(secondUserId);
                 
@@ -444,6 +410,24 @@ resetPair(pairIndex) {
                 
                 // Go to next pair or phase 5
                 this.startPhase1();
+                                const secondUserNode = gameState.cy.getElementById(secondUserId);
+                if (secondUserNode.length > 0) {
+                    // On récupère le conteneur du graphe pour le positionnement
+                    const cyContainer = document.getElementById('cy'); 
+                    // On crée un div temporaire à la position du noeud
+                    const tempTarget = document.createElement('div');
+                    const pos = secondUserNode.renderedPosition();
+                    const containerRect = cyContainer.getBoundingClientRect();
+                    tempTarget.style.position = 'absolute';
+                    tempTarget.style.left = `${containerRect.left + pos.x}px`;
+                    tempTarget.style.top = `${containerRect.top + pos.y}px`;
+                    document.body.appendChild(tempTarget);
+
+                    uiManager.createFloatingText('Connecté !', tempTarget, 'plus');
+                    
+                    // On supprime le div temporaire après un court instant
+                    setTimeout(() => document.body.removeChild(tempTarget), 10);
+                }
             }
         },
         
@@ -467,22 +451,54 @@ resetPair(pairIndex) {
             if (gameState.phase !== 5 || edge.data('virtual')) return;
             
             if (!gameState.usedLinks.has(edge.id())) {
-                // Can turn off only if not used
-                edge.data('used', !edge.data('used'));
+                const isCurrentlyUsed = edge.data('used');
                 
-                if (edge.data('used')) {
-                    edge.removeClass('unused');
-                } else {
+                // On ne fait l'action que si on est en train de DÉSACTIVER (passer de used=true à used=false)
+                if (isCurrentlyUsed) {
+                    edge.data('used', false);
                     edge.addClass('unused');
+
+                    // ** LA CORRECTION EST ICI **
+                    // 1. Récupérer l'élément de la jauge
+                    const gaugeBar = document.getElementById('consumption-gauge');
+                    
+                    if (gaugeBar) {
+                        // 2. Créer un élément cible temporaire positionné à la fin de la barre de la jauge
+                        const tempTarget = document.createElement('div');
+                        const gaugeRect = gaugeBar.getBoundingClientRect();
+                        
+                        // On le positionne à la fin de la barre (bord droit)
+                        tempTarget.style.position = 'absolute';
+                        tempTarget.style.left = `${gaugeRect.right}px`; 
+                        tempTarget.style.top = `${gaugeRect.top}px`;
+                        
+                        document.body.appendChild(tempTarget);
+
+                        // 3. Appeler le texte flottant sur cette cible temporaire
+                        const consumptionSaved = edge.data('consumption') || 0;
+                        uiManager.createFloatingText(`-${consumptionSaved.toFixed(0)} W`, tempTarget, 'minus');
+
+                        // 4. Supprimer la cible temporaire
+                        setTimeout(() => document.body.removeChild(tempTarget), 10);
+                    }
+                    
+                    // Mettre à jour les statistiques (ce qui va rétrécir la barre)
+                    uiManager.updateStats();
+
+                } else {
+                    // Si on réactive un lien, on met juste à jour
+                    edge.data('used', true);
+                    edge.removeClass('unused');
+                    uiManager.updateStats();
                 }
-                
-                // Update consumption
-                uiManager.updateStats();
             }
         },
         
         // Reset the game
         resetGame() {
+            // 1. Sauvegarder la valeur de l'objectif avant que `gameState.reset()` ne l'efface.
+            const savedMinimumConsumption = gameState.minimumConsumption;
+
             // Remove all virtual edges
             gameState.cy.edges('[virtual]').remove();
             
@@ -500,15 +516,25 @@ resetPair(pairIndex) {
                 pair.connected = false;
             });
             
-            // Reset game state
+            // Reset game state (ce qui met minimumConsumption à null)
             gameState.reset();
+
+            // ** LA CORRECTION EST ICI **
+            // 2. Restaurer la valeur de l'objectif après le reset.
+            gameState.minimumConsumption = savedMinimumConsumption;
             
-            // Update stats
+            // Rafraîchir la vue pour enlever les anciens chemins parallèles
+            if (eventHandlers && eventHandlers.refreshAllEdgeVisuals) {
+                eventHandlers.refreshAllEdgeVisuals();
+            }
+            uiManager.updateCapacityButtonUI();
+            // Mettre à jour les stats (ce qui redessinera la barre avec l'objectif)
             uiManager.updateStats();
             
             // Start from phase 1
             this.startPhase1();
         }
+    
     };
     
     // Set up Cytoscape event handlers if they weren't provided

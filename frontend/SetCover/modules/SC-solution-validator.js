@@ -14,24 +14,21 @@ export function initSolutionValidator(gameState, uiManager) {
       },
       
       handleSaveSolution() {
-        // Only allow saving in phase 3 and if all users are connected
-        if (gameState.phase !== 3) {
-          uiManager.showNotification("Connectez tous les utilisateurs avant d'enregistrer la solution", "error");
-          return;
-        }
-        
-        const areAllUsersConnected = this.areAllUsersConnected();
-        if (!areAllUsersConnected) {
-          uiManager.showNotification("Tous les utilisateurs doivent être connectés pour enregistrer la solution", "error");
-          return;
-        }
-        
-        const currentConsumption = this.getCurrentConsumption();
-        uiManager.showSolutionSaveDialog(currentConsumption, (confirmed) => {
-          if (confirmed) {
-            this.saveMinimumConsumption(gameState.loadedGraphId, currentConsumption);
+          if (gameState.phase !== 3 || !this.areAllUsersConnected()) {
+              uiManager.showNotification("Connectez tous les utilisateurs et soyez en phase d'optimisation pour enregistrer.", "error");
+              return;
           }
-        });
+          
+          const currentConsumption = this.getCurrentConsumption();
+          // NOUVEAU : Récupérer la liste des antennes actives
+          const activeAntennaIds = Array.from(gameState.activeAntennas);
+
+          uiManager.showSolutionSaveDialog(currentConsumption, (confirmed) => {
+            if (confirmed) {
+              // NOUVEAU : On utilise une nouvelle fonction pour plus de clarté
+              this.saveOptimalSolution(gameState.loadedGraphId, currentConsumption, activeAntennaIds);
+            }
+          });
       },
       
       areAllUsersConnected() {
@@ -54,33 +51,39 @@ export function initSolutionValidator(gameState, uiManager) {
         return totalConsumption;
       },
       
-      async saveMinimumConsumption(graphId, minimumConsumption) {
-        try {
-          const response = await fetch(`${gameState.API_URL}/${graphId}/minimumConsumption`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ minimumConsumption })
-          });
-          
-          const result = await response.json();
-          
-          if (result.success) {
-            console.log('Solution saved successfully');
-            // Update local game state
-            gameState.minimumConsumption = minimumConsumption;
-            // Show success message
-            uiManager.showNotification('Solution enregistrée avec succès!');
-          } else {
-            console.error('Failed to save solution:', result.message);
-            uiManager.showNotification("Échec de l'enregistrement de la solution!", 'error');
-          }
-        } catch (error) {
-          console.error('Error saving solution:', error);
-          uiManager.showNotification("Erreur lors de l'enregistrement de la solution!", 'error');
-        }
-      },
+      async saveOptimalSolution(graphId, minimumConsumption, optimalAntennaSet) {
+              try {
+                  // ---- LA CORRECTION EST ICI ----
+                  // On utilise la route PATCH générique sur le graphe, pas une route spécifique
+                  const response = await fetch(`${gameState.API_URL}/${graphId}`, {
+                      method: 'PATCH',
+                      headers: {
+                          'Content-Type': 'application/json'
+                      },
+                      // On envoie les deux informations
+                      body: JSON.stringify({ 
+                          minimumConsumption, 
+                          optimalAntennaSet 
+                      })
+                  });
+                
+                  const result = await response.json();
+                
+                  if (response.ok && result.success) {
+                      console.log('Solution saved successfully');
+                      // Mettre à jour l'état local
+                      gameState.minimumConsumption = minimumConsumption;
+                      gameState.optimalAntennaSet = optimalAntennaSet; // NOUVEAU
+                      uiManager.showNotification('Solution enregistrée avec succès!');
+                  } else {
+                      console.error('Failed to save solution:', result.message);
+                      uiManager.showNotification("Échec de l'enregistrement de la solution!", 'error');
+                  }
+              } catch (error) {
+                  console.error('Error saving solution:', error);
+                  uiManager.showNotification("Erreur lors de l'enregistrement de la solution!", 'error');
+              }
+          },
       
       checkWinCondition() {
         if (gameState.minimumConsumption === null) {
@@ -110,8 +113,10 @@ export function initSolutionValidator(gameState, uiManager) {
         // Update the energy savings gauge
         uiManager.updateEnergySavingsGauge(currentConsumption, maxConsumption);
         
+        console.log("solution appliqué automatiquement : ", gameState.applyingSolution);
         // Check win condition
-        if (this.checkWinCondition()) {
+        if (this.checkWinCondition() && !gameState.applyingSolution) {
+          
             uiManager.showLevelCompleteMessage();
         }
       },

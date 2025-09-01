@@ -332,7 +332,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Update available buttons when mode selection changes
-    modeSelector.addEventListener("change", () => {
+  /*  modeSelector.addEventListener("change", () => {
         console.log(`Mode changed to: ${modeSelector.value}`);
         
         // Clear the current graph if Cytoscape is initialized
@@ -345,7 +345,7 @@ document.addEventListener("DOMContentLoaded", () => {
         
         // Show the buttons specific to the selected mode
         showModeButtons(modeSelector.value);
-    });
+    });*/
     
     // Attach event listener for dynamic buttons
     editorButtonsContainer.addEventListener('click', (event) => {

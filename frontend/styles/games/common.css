@@ -15,6 +15,7 @@
   overflow: hidden !important; /* FORCE HIDING OVERFLOW */
   background-size: cover;
   background-position: center;
+  visibility: hidden;
 }
 
 /* Add a subtle overlay to improve contrast */
@@ -73,7 +74,7 @@
   overflow: hidden; /* Add overflow hidden here too */
   position: relative; /* Already set, needed for absolute children */
   box-sizing: border-box;
-  padding-bottom: 120px; /* Existing space for stats */
+  padding-bottom: 150px; /* Existing space for stats */
 }
 
 /* Popup container at the top of center column */
@@ -81,10 +82,10 @@
   width: 100%;
   text-align: center;
   pointer-events: none;
-  padding: var(--space-sm) 0;
+ /* padding: var(--space-sm) 0;*/
   z-index: 10;
   position: relative; /* Position it relative to main-game-area */
-  top: var(--space-sm); /* Space from the top edge of main-game-area */
+  /*top: var(--space-sm); /* Space from the top edge of main-game-area */
   left: 0;
   right: 0; /* Center it horizontally */
 }
@@ -112,8 +113,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  height: 0px; /* Fixed height */
-  background-color: var(--color-bg-panel);
+  height: 0px; 
+  /*background-color: var(--color-bg-panel);*/
   border-radius: var(--border-radius-md);
   padding: var(--space-sm);
   box-shadow: var(--shadow-md);
@@ -330,5 +331,46 @@
   .popup-message {
     font-size: 14px;
     padding: 8px 12px;
+  }
+}
+
+.floating-text {
+  position: absolute;
+  z-index: 1001; /* Au-dessus de tout */
+  pointer-events: none; /* Ne doit pas intercepter les clics */
+  font-size: 30px;
+  font-weight: bold;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  animation: float-and-fade 3.0s ease-out forwards;
+}
+
+/* Style pour les points (connexion réussie) */
+.floating-text.score-plus {
+  color: #ffee00; /* Vert */
+}
+
+/* Style pour les économies (lien désactivé) */
+.floating-text.score-minus {
+  color: #FFC107; /* Jaune/Or */
+}
+
+.popup-message .inline-icon {
+  vertical-align: middle; /* Aligne l'icône avec le milieu du texte */
+  margin: 0 4px; /* Ajoute un petit espace autour de l'icône */
+  width: 2em;
+  height: 2em;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background-color: #185fca;
+}
+/* Keyframes pour l'animation */
+@keyframes float-and-fade {
+  0% {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -350px); /* Monte de 50px */
+    opacity: 0;
   }
 }

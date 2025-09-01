@@ -9,8 +9,6 @@ import { initSolutionValidator } from './modules/RV-solution-validator.js';
 import { initPathFinder } from './modules/RV-path-finder.js';
 import { initCourseContent } from '../course-content.js';
 
-// --- START: Resize Handling Logic ---
-
 /**
  * Debounce function to limit the rate at which a function can fire.
  */
@@ -42,9 +40,6 @@ function handleResize(gameState) {
     console.warn("handleResize called but gameState or gameState.cy is not available.");
   }
 }
-
-// --- END: Resize Handling Logic ---
-
 
 /**
  * Initialize and connect all components of the RV game
@@ -82,9 +77,11 @@ async function initializeGame() {
 
     // Initialize UI manager
     const uiManager = initUIManager(gameState);
+    uiManager.initTooltip();
 
     // Initialize event handlers
     const eventHandlers = initEventHandlers(gameState, uiManager);
+    gameState.eventHandlers = eventHandlers;
 
     // Initialize game phases
     const gamePhases = initGamePhases(gameState, uiManager, eventHandlers);
@@ -116,7 +113,9 @@ async function initializeGame() {
     pathFinder.setupPathFinderButtons();
 
     courseContent.setupCourseButton();
-    
+
+
+
     const resetButton = document.getElementById('resetViewBtn');
     if (resetButton) {
       resetButton.addEventListener('click', () => {
@@ -167,13 +166,14 @@ async function initializeGame() {
         // Un petit délai pour assurer que tout est chargé correctement
         setTimeout(() => {
           gameState.courseContentModule.showStartContent();
-        }, 800);
+        }, 900);
       }
     }
     
     // Étendre le graphLoader pour appeler showLevelStartMessage après chargement d'un niveau
     const originalStartGameplay = graphLoader.startGameplay;
     graphLoader.startGameplay = function(graphId) {
+      document.querySelector('.gameplay').style.visibility = 'visible';
       originalStartGameplay.call(this, graphId);
       
       // Ajouter un délai pour afficher le message après le chargement

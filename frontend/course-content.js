@@ -1,11 +1,5 @@
 // course-content.js - Manages course content display and editing functionality
 
-/**
- * Initialize course content functionality
- * @param {Object} gameState - The game state object
- * @param {Object} uiManager - The UI manager
- * @returns {Object} - Course content module functions
- */
 export function initCourseContent(gameState, uiManager) {
   // Create references to DOM elements we'll need
   let coursePopup = null;
@@ -34,11 +28,7 @@ export function initCourseContent(gameState, uiManager) {
     }
   }
   
-  /**
-   * Show a notification to the user
-   * @param {string} message - The message to show
-   * @param {string} type - The type of notification (success, error, info)
-   */
+
   function showNotification(message, type = 'info') {
     if (uiManager && uiManager.showNotification) {
       uiManager.showNotification(message, type);
@@ -49,118 +39,82 @@ export function initCourseContent(gameState, uiManager) {
     }
   }
   
-  /**
-   * Create and display the course content popup
-   * @param {Object} courseContent - The course content to display
-   */
+  
   function showCoursePopup(courseContent) {
-    // Remove existing popup if any
-    if (coursePopup && document.body.contains(coursePopup)) {
-      document.body.removeChild(coursePopup);
-    }
-    
-    // Create popup overlay
-    coursePopup = document.createElement('div');
-    coursePopup.className = 'course-popup-overlay';
-    
-    // Create popup container
-    const container = document.createElement('div');
-    container.className = 'course-popup-container';
-    
-    // Create header
-    const header = document.createElement('div');
-    header.className = 'course-popup-header';
-    
-    const title = document.createElement('div');
-    title.className = 'course-popup-title';
-    title.textContent = courseContent.title || 'Course Content';
-    
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'course-popup-close';
-    closeBtn.innerHTML = '&times;';
-    closeBtn.addEventListener('click', () => {
-      document.body.removeChild(coursePopup);
-      coursePopup = null;
-      state.isContentVisible = false;
+  // Remove existing popup if any
+  if (coursePopup && document.body.contains(coursePopup)) {
+    document.body.removeChild(coursePopup);
+  }
+
+  // Create overlay & container
+  coursePopup = document.createElement('div');
+  coursePopup.className = 'course-popup-overlay';
+  const container = document.createElement('div');
+  container.className = 'course-popup-container';
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'course-popup-header';
+  const title = document.createElement('div');
+  title.className = 'course-popup-title';
+  title.textContent = courseContent.title || 'Course Content';
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'course-popup-close';
+  closeBtn.innerHTML = '&times;';
+  closeBtn.addEventListener('click', () => {
+    document.body.removeChild(coursePopup);
+    coursePopup = null;
+    state.isContentVisible = false;
+  });
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+
+  // Main content
+  const content = document.createElement('div');
+  content.className = 'course-popup-content';
+
+  if (!courseContent.content || !courseContent.content.trim()) {
+    content.innerHTML = '<p><em>No content available for this course.</em></p>';
+  } else {
+    // Strip out level-start/end blocks
+    const temp = document.createElement('div');
+    temp.innerHTML = courseContent.content;
+    temp.querySelectorAll('.level-start, .level-end').forEach(el => el.remove());
+    content.innerHTML = temp.innerHTML.trim() || '<p><em>No content available for this course.</em></p>';
+  }
+
+  // ─── NEW: Inject all courseContent.images here ───
+  if (Array.isArray(courseContent.images) && courseContent.images.length) {
+    courseContent.images.forEach(img => {
+      if (!img.path) return;
+      const imgBox = document.createElement('div');
+      imgBox.className = 'course-popup-image-container';
+      imgBox.style.textAlign = img.align || 'left';
+
+      const imageEl = document.createElement('img');
+      imageEl.className = 'course-popup-image';
+      imageEl.src = img.path;
+      imageEl.alt = img.caption || '';
+
+      imgBox.appendChild(imageEl);
+
+      if (img.caption) {
+        const cap = document.createElement('div');
+        cap.className = 'course-popup-caption';
+        cap.textContent = img.caption;
+        imgBox.appendChild(cap);
+      }
+
+      content.appendChild(imgBox);
     });
-    
-    header.appendChild(title);
-    header.appendChild(closeBtn);
-    
-    // Create content
-    const content = document.createElement('div');
-    content.className = 'course-popup-content';
-    
-    // Handle empty content with a message
-    if (!courseContent.content || !courseContent.content.trim()) {
-      content.innerHTML = '<p><em>No content available for this course.</em></p>';
-    } else {
-      // Parse HTML and remove level-specific sections
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = courseContent.content;
-  
-      // Remove level-start and level-end sections
-      const levelStartSections = tempDiv.querySelectorAll('.level-start');
-      const levelEndSections = tempDiv.querySelectorAll('.level-end');
-  
-      levelStartSections.forEach(el => el.remove());
-      levelEndSections.forEach(el => el.remove());
-  
-      // Set cleaned content
-      content.innerHTML = tempDiv.innerHTML.trim();
-  
-      if (!content.innerHTML.trim()) {
-        content.innerHTML = '<p><em>No content available for this course.</em></p>';
-      }
-    }
-    
-    // Add images if available
-    if (courseContent.images && courseContent.images.length > 0) {
-      courseContent.images.forEach(image => {
-        if (image.path) {
-          const imgContainer = document.createElement('div');
-          imgContainer.className = 'course-popup-image-container';
-          
-          const img = document.createElement('img');
-          img.className = 'course-popup-image';
-          img.src = image.path;
-          img.alt = image.caption || 'Course image';
-          
-          imgContainer.appendChild(img);
-          
-          if (image.caption) {
-            const caption = document.createElement('div');
-            caption.className = 'course-popup-caption';
-            caption.textContent = image.caption;
-            imgContainer.appendChild(caption);
-          }
-          
-          content.appendChild(imgContainer);
-        }
-      });
-    }
-    
-    // Assemble popup
-    container.appendChild(header);
-    container.appendChild(content);
-    coursePopup.appendChild(container);
-    
-    // Add keyboard event to close on Escape key
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        document.body.removeChild(coursePopup);
-        coursePopup = null;
-        state.isContentVisible = false;
-        document.removeEventListener('keydown', handleKeyDown);
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    
-    // Add to document
-    document.body.appendChild(coursePopup);
-    state.isContentVisible = true;
-    
-    console.log('Course popup displayed');
+  }
+
+  // Assemble & display
+  container.appendChild(header);
+  container.appendChild(content);
+  coursePopup.appendChild(container);
+  document.body.appendChild(coursePopup);
+  state.isContentVisible = true;
   }
   
   // Add updateCourseContent method to graphPersistence if it doesn't exist
@@ -222,11 +176,7 @@ export function initCourseContent(gameState, uiManager) {
     };
   }
   
-  /**
-   * Extraire le contenu spécifique pour le début ou la fin du niveau
-   * @param {string} type - Le type de contenu à extraire ('start' ou 'end')
-   * @returns {string} - Le contenu HTML
-   */
+
   function extractLevelContent(type) {
     if (!gameState || !gameState.courseContent) {
       return '';
@@ -273,78 +223,93 @@ export function initCourseContent(gameState, uiManager) {
     }
   }
 
-  /**
-   * Afficher une popup avec un message de niveau
-   * @param {string} title - Le titre de la popup
-   * @param {string} content - Le contenu HTML de la popup
-   */
-  function showLevelMessagePopup(title, content) {
-    // Remove existing popup if any
-    const existingPopup = document.querySelector('.level-message-popup');
-    if (existingPopup) {
-      document.body.removeChild(existingPopup);
-    }
-    
-    // Create popup overlay
+  function showLevelMessagePopup(title, contentHtml) {
+    // Remove any existing level popup
+    const existing = document.querySelector('.level-message-popup');
+    if (existing) document.body.removeChild(existing);
+
+    // Overlay
     const overlay = document.createElement('div');
     overlay.className = 'level-message-popup';
-    
-    // Create popup container
+
+    // Container
     const container = document.createElement('div');
     container.className = 'level-message-container';
-    
-    // Create header
+
+    // Header
     const header = document.createElement('div');
     header.className = 'level-message-header';
-    
     const titleEl = document.createElement('h3');
     titleEl.textContent = title;
-    header.appendChild(titleEl);
-    
     const closeBtn = document.createElement('button');
     closeBtn.className = 'level-message-close';
     closeBtn.innerHTML = '&times;';
-    closeBtn.addEventListener('click', () => {
-      document.body.removeChild(overlay);
-    });
+    closeBtn.addEventListener('click', () => document.body.removeChild(overlay));
+    header.appendChild(titleEl);
     header.appendChild(closeBtn);
-    
-    // Create content
+
+    // Content
     const contentEl = document.createElement('div');
     contentEl.className = 'level-message-content';
-    contentEl.innerHTML = content;
-    
-    // Create footer with continue button
+    contentEl.innerHTML = contentHtml;
+
+    // ─── NEW: Inject any level‐relevant images ───
+    if (gameState.courseContent && Array.isArray(gameState.courseContent.images)) {
+      gameState.courseContent.images.forEach(img => {
+        if (!img.path) {
+          console.log("no images found");
+          return
+        };
+        const imgContainer = document.createElement('div');
+        imgContainer.className = 'level-popup-image-container';
+        imgContainer.style.textAlign = img.align || 'center';
+
+        const image = document.createElement('img');
+        image.className = 'level-popup-image';
+        console.log(img.path);
+        image.src = img.path;
+        image.alt = img.caption || '';
+
+        imgContainer.appendChild(image);
+
+        if (img.caption) {
+          const cap = document.createElement('div');
+          cap.className = 'level-popup-caption';
+          cap.textContent = img.caption;
+          imgContainer.appendChild(cap);
+        }
+
+        contentEl.appendChild(imgContainer);
+      });
+    }
+
+    // Footer with Continue button
     const footer = document.createElement('div');
     footer.className = 'level-message-footer';
-    
-    const continueBtn = document.createElement('button');
-    continueBtn.className = 'primary-button';
-    continueBtn.textContent = 'Continuer';
-    continueBtn.addEventListener('click', () => {
-      document.body.removeChild(overlay);
-    });
-    footer.appendChild(continueBtn);
-    
-    // Assemble popup
+    const contBtn = document.createElement('button');
+    contBtn.className = 'primary-button';
+    contBtn.textContent = 'Continuer';
+    contBtn.addEventListener('click', () => document.body.removeChild(overlay));
+    footer.appendChild(contBtn);
+
+    // Assemble
     container.appendChild(header);
     container.appendChild(contentEl);
     container.appendChild(footer);
     overlay.appendChild(container);
-    
-    // Add to document
-    document.body.appendChild(overlay);
-    
-    // Add keyboard event to close on Escape key
-    const handleKeyDown = (e) => {
+
+    // Close on Escape
+    const onEsc = e => {
       if (e.key === 'Escape') {
-        document.body.removeChild(overlay);
-        document.removeEventListener('keydown', handleKeyDown);
+        if (document.body.contains(overlay)) document.body.removeChild(overlay);
+        document.removeEventListener('keydown', onEsc);
       }
     };
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', onEsc);
+
+    document.body.appendChild(overlay);
+    state.isContentVisible = true;
   }
-  
   // Return public API
   return {
     setupCourseButton,

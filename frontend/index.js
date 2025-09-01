@@ -157,7 +157,11 @@ document.addEventListener("DOMContentLoaded", () => {
       window.app.initCourseEditor();
       
       // Show buttons for the selected mode
-      showModeButtons(modeSelector.value);
+      if (window.graphEditor) {
+          window.graphEditor.resetCounters();
+          showModeButtons(modeSelector.value); 
+      }
+      addSaveButton();
     });
 
     // Return to home
@@ -191,44 +195,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Event listener for mode selector change - reload graphs when mode changes
     modeSelector.addEventListener("change", () => {
-      console.log(`Mode changed to: ${modeSelector.value}`);
-      
-      // Clear the current graph if Cytoscape is initialized
-      if (window.cy) {
-        window.cy.elements().remove();
+        console.log(`Mode changed to: ${modeSelector.value}`);
         
-        // Reset counters
-        if (window.graphEditor) {
-          window.graphEditor.resetCounters();
+        // On ne fait QUE recharger la liste. ON N'APPELLE PAS showModeButtons.
+        if (graphListContainer.style.display === "block") {
+            fetchGraphs(modeSelector.value, elements);
         }
-      }
-      
-      // Update buttons based on the selected mode
-      if (window.graphEditor) {
-        const mode = modeSelector.value;
         
-        // Remove existing buttons
-        const existingButtons = document.querySelectorAll(".dynamic-button");
+        // On nettoie les boutons au cas où ils seraient déjà affichés
+        const existingButtons = document.querySelectorAll(".dynamic-button, .antenna-toggle-container, #saveGraphBtn, .capacity-all-button");
         existingButtons.forEach(button => button.remove());
-        
-        // Remove existing antenna toggle containers
-        const existingToggles = document.querySelectorAll(".antenna-toggle-container");
-        existingToggles.forEach(toggle => toggle.remove());
-        
-        // Get mode-specific buttons
-        const editorButtonsContainer = document.querySelector(".editor-buttons");
-        if (editorButtonsContainer) {
-          showModeButtons(mode);
-        }
-        
-        // Update active mode
-        window.graphEditor.activeMode = mode;
-      }
-      
-      // If the graph list is visible, reload graphs for the new mode
-      if (graphListContainer.style.display === "block") {
-        fetchGraphs(modeSelector.value, elements);
-      }
     });
   }
   
@@ -260,39 +236,51 @@ document.addEventListener("DOMContentLoaded", () => {
   
   // Function to display the list of graphs
   function displayGraphList(graphs, elements) {
-    const { graphList, graphListContainer, cyContainer } = elements;
-    
-    graphs.forEach(graph => {
-      const listItem = document.createElement("li");
-      listItem.textContent = graph.name;
-      listItem.setAttribute("data-id", graph._id);
-      listItem.addEventListener("click", () => {
-        console.log(`Selected graph: ${graph.name} with ID: ${graph._id}`);
-        
-        // Hide graph list container
-        graphListContainer.style.display = "none";
-        
-        // Show cytoscape container
-        cyContainer.style.display = "block";
-        
-        // Make sure "Créer un niveau" button stays visible
-        const createNewLevelBtn = document.getElementById("createNewLevelBtn");
-        if (createNewLevelBtn) {
-          createNewLevelBtn.style.display = "block";
-        }
-        
-        // Initialize Cytoscape if needed
-        if (window.cytoscapeEditor && !window.cytoscapeEditor.isInitialized) {
-          window.cytoscapeEditor.initCytoscape();
-        }
-        
-        // Load the selected graph
-        loadSelectedGraph(graph);
-      });
+      const { graphList, graphListContainer, cyContainer } = elements;
+      graphList.innerHTML = ''; 
       
-      graphList.appendChild(listItem);
-    });
+      graphs.forEach(graph => {
+          const listItem = document.createElement("li");
+          listItem.textContent = graph.name;
+          listItem.setAttribute("data-id", graph._id);
+          listItem.addEventListener("click", () => {
+              console.log(`Selected graph: ${graph.name} with ID: ${graph._id}`);
+              
+              graphListContainer.style.display = "none";
+              cyContainer.style.display = "block";
+              
+              if (window.cytoscapeEditor && !window.cytoscapeEditor.isInitialized) {
+                  window.cytoscapeEditor.initCytoscape();
+              }
+              
+              loadSelectedGraphAndShowButtons(graph);
+          });
+          graphList.appendChild(listItem);
+      });
   }
+
+function loadSelectedGraphAndShowButtons(graph) {
+    if (!window.graphPersistence || !window.graphPersistence.loadGraph) return;
+
+    window.graphPersistence.loadGraph(graph._id)
+      .then(result => {
+        if (result.success) {
+          console.log(`Graph "${graph.name}" loaded successfully`);
+          
+          const modeSelector = document.getElementById("modeSelector");
+          modeSelector.value = graph.mode;
+          
+          // >>> CORRECTION : On appelle showModeButtons ICI <<<
+          // Uniquement APRÈS avoir chargé le graphe
+          showModeButtons(graph.mode);
+          addSaveButton();
+
+          window.app.initCourseEditor();
+        } else {
+          // ...
+        }
+      });
+}
   
   // Function to load a selected graph
   function loadSelectedGraph(graph) {

@@ -116,7 +116,7 @@ export function initUIManager(gameState) {
             if (gameState.cy) {
                 gameState.cy.destroy();
                 gameState.cy = null;
-                window.cy = null; // <-- AJOUT IMPORTANT POUR LA COHÉRENCE
+                window.cy = null; 
             }
             
             // Reset game state

@@ -18,7 +18,7 @@ export function initCytoscape(gameState, options = {}) {
     }
     
     // Get unified styles
-    const gameplayStyles = createSCStyles();
+    const gameplayStyles = createSCStyles(gameState);
     
     // Default configuration for gameplay
     const defaultConfig = {

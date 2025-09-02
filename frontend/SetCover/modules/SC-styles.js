@@ -1,5 +1,5 @@
 
-export function createSCStyles() {
+export function createSCStyles(gameState) {
     // Base styles for core elements
     const baseStyles = [
       // Default node styling
@@ -72,6 +72,20 @@ export function createSCStyles() {
           'shape': 'ellipse',
           'width': 50,
           'height': 50,
+          'label': function(ele) {
+            if (gameState && gameState.showConsumptionLabels) {
+              return (ele.data('consumption') || 0) + ' W';
+            }
+            return '';
+          },
+          'color': '#FFFFFF',
+          'text-outline-color': '#000000',
+          'text-outline-width': 2,
+          'font-weight': 'bold',
+          'font-size': 12,
+          'text-valign': 'bottom',
+          'text-margin-y': 5,
+
           'background-position-x': '50%',
           'background-position-y': '50%',
           'background-width': '70%',

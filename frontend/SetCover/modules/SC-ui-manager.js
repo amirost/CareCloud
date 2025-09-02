@@ -12,6 +12,7 @@ export function initUIManager(gameState) {
         returnToLevelsBtn: document.getElementById("returnToLevelsBtn"),
         homeBtn: document.getElementById("homeBtn"),
         resetBtn: document.getElementById("resetBtn"),
+        toggleConsumptionBtn: document.getElementById("toggleConsumptionBtn"),
         popupMessage: document.getElementById("popup-message"),
         connectedCount: document.getElementById("connected-count"),
         totalUsers: document.getElementById("total-users"),
@@ -101,7 +102,7 @@ export function initUIManager(gameState) {
             if (gameState.cy) {
                 gameState.cy.destroy();
                 gameState.cy = null;
-                window.cy = null; // <-- AJOUT IMPORTANT
+                window.cy = null; 
             }
             
             // Reset game state
@@ -319,7 +320,12 @@ export function initUIManager(gameState) {
             ui.totalUsers.textContent = count;
         },
         
-
+        clearUserPanel() {
+            if (ui.userItemsContainer) {
+                ui.userItemsContainer.innerHTML = '';
+                console.log("User items panel cleared.");
+            }
+        },
         
         // Create user items in the sidebar
         createUserItems() {
@@ -576,7 +582,23 @@ export function initUIManager(gameState) {
             // Reset the current game
             ui.resetBtn.addEventListener("click", () => {
                 gamePhases.resetGame();
+                this.updateConsumptionButtonUI();
             });
+
+            if (ui.toggleConsumptionBtn) {
+              ui.toggleConsumptionBtn.addEventListener('click', () => {
+                // 1. Inverser l'état
+                gameState.showConsumptionLabels = !gameState.showConsumptionLabels;
+
+                // 2. Mettre à jour l'apparence du bouton
+                this.updateConsumptionButtonUI();
+
+                // 3. Forcer Cytoscape à redessiner
+                if (gameState.cy) {
+                  gameState.cy.style().update();
+                }
+              });
+            }
         },
         
         // Loading indicators
@@ -734,6 +756,18 @@ export function initUIManager(gameState) {
                     textElement.parentElement.removeChild(textElement);
                 }
             }, 1500);
+        },
+
+        updateConsumptionButtonUI() {
+            if (!ui.toggleConsumptionBtn) return;
+
+            if (gameState.showConsumptionLabels) {
+                ui.toggleConsumptionBtn.classList.add('active');
+                ui.toggleConsumptionBtn.innerHTML = '<i class="fas fa-bolt"></i> Masquer Consommation';
+            } else {
+                ui.toggleConsumptionBtn.classList.remove('active');
+                ui.toggleConsumptionBtn.innerHTML = '<i class="fas fa-bolt"></i> Afficher Consommation';
+            }
         },
     };
 }

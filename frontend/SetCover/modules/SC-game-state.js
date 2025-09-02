@@ -33,6 +33,7 @@ export function initGameState() {
         // ** AJOUTS POUR LA CORRECTION **
         initialConsumption: 0,     // Consommation si toutes les antennes sont allumées
         minimumConsumption: null,  // Consommation cible (solution optimale)
+        showConsumptionLabels: false,
         applyingSolution: false, // Pour savoir si une solution auto est en cours d'application
         // Reset game state
         reset: function() {
@@ -48,6 +49,7 @@ export function initGameState() {
             this.initialConsumption = 0;
             this.minimumConsumption = null;
             this.applyingSolution = false;
+            this.showConsumptionLabels = false;
             console.log("gameState reset: all tracking states and consumption values cleared.");
         },
 

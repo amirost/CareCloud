@@ -58,7 +58,6 @@ export function createRVStyles(gameState) {
           'text-background-shape': 'round-rectangle',
           'text-rotation': 'autorotate',
 
-          // **C'EST ICI QUE LA MAGIE OPÈRE**
           // Le décalage vertical du label dépend de l'utilisation du lien.
           'text-margin-y': function(ele) {
             let isUsed = false;

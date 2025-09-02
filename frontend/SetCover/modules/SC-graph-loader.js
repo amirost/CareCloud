@@ -65,7 +65,7 @@ export function initGraphLoader(gameState, uiManager) {
             console.log(`Starting gameplay with graph ID: ${graphId}`);
             
             gameState.reset();
-            uiManager.updateStats();
+           
             // Switch to gameplay view
             uiManager.showGameplay();
             
@@ -81,7 +81,8 @@ export function initGraphLoader(gameState, uiManager) {
                 alert("Erreur critique: Impossible de démarrer le moteur du jeu.");
                 return;
             }
-            
+             uiManager.updateStats();
+             uiManager.clearUserPanel();
             // Load the graph into the new instance
             this.loadGraph(graphId);
         },

@@ -3,6 +3,22 @@
 import { setHaloVisibility } from './SC-styles.js';
 
 export function initPathFinder(gameState, uiManager) {
+    
+    function backupPlayerSolution() {
+        // Copie profonde de la Map de Sets
+        const antennaUsersBackup = new Map();
+        gameState.antennaUsers.forEach((userSet, antennaId) => {
+            antennaUsersBackup.set(antennaId, new Set(userSet)); // Crée une nouvelle copie du Set
+        });
+
+        gameState.playerSolutionBackup = {
+            activeAntennas: new Set(gameState.activeAntennas),
+            connectedUsers: new Set(gameState.connectedUsers),
+            antennaUsers: antennaUsersBackup
+        };
+        console.log("Player solution backed up for SC:", gameState.playerSolutionBackup);
+        uiManager.showRestoreButton(true);
+    }
     return {
         // Met en place les écouteurs d'événements pour les boutons
         setupPathFinderButtons() {
@@ -27,6 +43,11 @@ export function initPathFinder(gameState, uiManager) {
             } else {
                 console.warn("Button with ID 'applyGreedyBtn' not found.");
             }
+
+            const restoreBtn = document.getElementById('restorePlayerSolutionBtn');
+            if (restoreBtn) {
+                restoreBtn.addEventListener('click', () => this.restorePlayerSolution());
+            }
         },
         
         // Applique la solution optimale SAUVEGARDÉE
@@ -35,7 +56,7 @@ export function initPathFinder(gameState, uiManager) {
                 uiManager.showNotification("Aucune solution optimale enregistrée pour ce niveau", "error");
                 return;
             }
-            
+            backupPlayerSolution();
             const savedMinimumConsumption = gameState.minimumConsumption;
             
             if (gameState.gamePhases && gameState.gamePhases.resetGame) {
@@ -55,9 +76,59 @@ export function initPathFinder(gameState, uiManager) {
             }, 3000);
         },
         
+        restorePlayerSolution() {
+            if (!gameState.playerSolutionBackup) {
+                uiManager.showNotification("Aucune solution à restaurer.", "info");
+                return;
+            }
+            console.log("Restoring player solution for SC...");
+
+            // --- ÉTAPE 1 : RESTAURER LES DONNÉES DU JOUEUR ---
+            gameState.activeAntennas = gameState.playerSolutionBackup.activeAntennas;
+            gameState.connectedUsers = gameState.playerSolutionBackup.connectedUsers;
+            gameState.antennaUsers = gameState.playerSolutionBackup.antennaUsers;
+
+            // --- ÉTAPE 2 : NETTOYAGE VISUEL COMPLET ---
+            // On supprime TOUTES les arêtes virtuelles de la solution automatique qui était affichée.
+            gameState.cy.edges('[virtual]').remove();
+            console.log("All previous virtual edges removed.");
+
+            // --- ÉTAPE 3 : REDESSIN COMPLET BASÉ SUR LES DONNÉES RESTAURÉES ---
+            
+            // a) Mettre à jour l'état visuel des antennes (on/off)
+            gameState.cy.nodes('[type="antenna"]').forEach(antennaNode => {
+                const isActive = gameState.activeAntennas.has(antennaNode.id());
+                antennaNode.data('active', isActive);
+                if (gameState.gamePhases && gameState.gamePhases.updateAntennaAppearance) {
+                    gameState.gamePhases.updateAntennaAppearance(antennaNode, isActive);
+                }
+            });
+            console.log("Antenna on/off states restored.");
+
+            // b) Redessiner les liens virtuels du joueur en lisant la Map `antennaUsers` restaurée
+            gameState.antennaUsers.forEach((userSet, antennaId) => {
+                userSet.forEach(userId => {
+                    const userNode = gameState.cy.getElementById(userId);
+                    if (userNode.length > 0 && gameState.eventHandlers) {
+                        const color = userNode.style('background-color');
+                        gameState.eventHandlers.createVirtualConnection(userId, antennaId, color);
+                    }
+                });
+            });
+            console.log("Player's virtual connections have been redrawn.");
+            
+            // --- ÉTAPE 4 : FINALISATION ---
+            uiManager.updateStats();
+            if (gameState.gamePhases) {
+                gameState.gamePhases.startPhase1();
+            }
+            
+            uiManager.showRestoreButton(false);
+            gameState.playerSolutionBackup = null;
+        },
         // Applique la solution GLOUTONNE calculée
         applyGreedySolution() {
-            
+            backupPlayerSolution();
             const savedMinimumConsumption = gameState.minimumConsumption;
             const minimalAntennaSet = this.calculateGreedySet();
             

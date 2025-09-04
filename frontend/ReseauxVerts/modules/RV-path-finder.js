@@ -1,9 +1,41 @@
 // RV-path-finder.js - Handles automated path finding for the RV game
 
 export function initPathFinder(gameState, uiManager) {
+    
+    function backupPlayerSolution() {
+        // On crée une nouvelle Map pour la sauvegarde
+        const usedLinksBackup = new Map();
+        
+        // Pour chaque entrée dans usedLinks, on crée une NOUVELLE copie du tableau de couleurs
+        gameState.usedLinks.forEach((colors, edgeId) => {
+            usedLinksBackup.set(edgeId, [...colors]); // L'opérateur "..." crée une copie
+        });
+
+        const physicalEdgesState = {};
+        gameState.cy.edges(':not([virtual])').forEach(edge => {
+            physicalEdgesState[edge.id()] = edge.data('used');
+        });
+
+        gameState.playerSolutionBackup = {
+            usedLinks: usedLinksBackup, // On utilise notre Map copiée en profondeur
+            connectedUsers: new Set(gameState.connectedUsers),
+            completedPaths: JSON.parse(JSON.stringify(gameState.completedPaths)), // Copie profonde pour être sûr
+            userPairs: JSON.parse(JSON.stringify(gameState.userPairs)),
+            physicalEdgesState: physicalEdgesState
+        };
+        console.log("Player solution backed up (deep copy):", gameState.playerSolutionBackup);
+        uiManager.showRestoreButton(true);
+    }
+
     return {
         // Set up event listeners for path-finder buttons
         setupPathFinderButtons() {
+
+            const restoreBtn = document.getElementById('restorePlayerSolutionBtn');
+            if (restoreBtn) {
+                restoreBtn.addEventListener('click', () => this.restorePlayerSolution());
+            }
+
             // Find all shortest paths button
             const findAllPathsBtn = document.getElementById('findAllPathsBtn');
             if (findAllPathsBtn) {
@@ -34,7 +66,7 @@ export function initPathFinder(gameState, uiManager) {
         // Find and connect all user pairs using the shortest paths
         findAllShortestPaths() {
             // These path finding functions should work in any phase to continue existing connections
-            
+            backupPlayerSolution();
             // First, check if there's an in-progress path that needs to be completed
             if (gameState.currentPath && gameState.currentPath.current && gameState.currentUserPair !== null) {
                 console.log("There's an in-progress path. Completing it first...");
@@ -383,12 +415,13 @@ export function initPathFinder(gameState, uiManager) {
         
         // Apply the saved optimal solution if one exists
         applyOptimalSolution() {
+            
             if (!gameState.optimalPathSolution || gameState.optimalPathSolution.length === 0) {
                 uiManager.showNotification("Aucune solution de chemin optimale n'est enregistrée pour ce niveau.", "error");
                 return;
             }
             console.log("Applying saved optimal path solution...");
-
+            backupPlayerSolution();
             if (gameState.gamePhases && gameState.gamePhases.resetGame) {
                 gameState.gamePhases.resetGame();
             }
@@ -454,6 +487,68 @@ export function initPathFinder(gameState, uiManager) {
                 console.log("Flag 'applyingSolution' set to false.");
             }, 3000);
         },
+
+        restorePlayerSolution() {
+            if (!gameState.playerSolutionBackup) {
+                uiManager.showNotification("Aucune solution à restaurer.", "info");
+                return;
+            }
+            console.log("Restoring player solution...");
+
+            console.groupCollapsed('[Restore] État de usedLinks AVANT restauration');
+            console.log("`usedLinks` contient actuellement les données de la solution automatique :");
+            console.log(new Map(gameState.usedLinks));
+            console.groupEnd();
+
+            // --- RESTAURATION DES DONNÉES ---
+            gameState.usedLinks = gameState.playerSolutionBackup.usedLinks;
+            gameState.connectedUsers = gameState.playerSolutionBackup.connectedUsers;
+            gameState.completedPaths = gameState.playerSolutionBackup.completedPaths;
+            gameState.userPairs = gameState.playerSolutionBackup.userPairs;
+            
+            console.groupCollapsed('[Restore] État de usedLinks APRÈS restauration');
+            console.log("`usedLinks` a été écrasé avec les données de la sauvegarde du joueur :");
+            console.log(new Map(gameState.usedLinks));
+            console.groupEnd();
+
+            // --- NETTOYAGE VISUEL ET REDESSIN ---
+            const { physicalEdgesState } = gameState.playerSolutionBackup;
+            if (physicalEdgesState) {
+                gameState.cy.edges(':not([virtual])').forEach(edge => {
+                    const savedState = physicalEdgesState[edge.id()];
+                    if (savedState !== undefined) {
+                        edge.data('used', savedState);
+                        edge.toggleClass('unused', !savedState);
+                    }
+                });
+            }
+            
+            gameState.cy.edges('[virtual]').remove();
+            
+            gameState.completedPaths.forEach(pathData => {
+                const path = pathData.path;
+                if (path.length >= 2) {
+                    const user1 = path[0], antenna1 = path[1];
+                    const user2 = path[path.length - 1], antenna2 = path[path.length - 2];
+                    gameState.cy.add({ group: 'edges', data: { id: `virtual-edge-${user1}-${antenna1}`, source: user1, target: antenna1, virtual: true }, style: { 'line-color': pathData.color, 'width': 3 } });
+                    gameState.cy.add({ group: 'edges', data: { id: `virtual-edge-${antenna2}-${user2}`, source: antenna2, target: user2, virtual: true }, style: { 'line-color': pathData.color, 'width': 3 } });
+                }
+            });
+
+            if (gameState.eventHandlers) {
+                gameState.eventHandlers.refreshAllEdgeVisuals();
+            }
+
+            // --- FINALISATION ---
+            uiManager.updateStats();
+            if (gameState.gamePhases) {
+                gameState.gamePhases.startPhase1(); 
+            }
+            
+            uiManager.showRestoreButton(false);
+            gameState.playerSolutionBackup = null;
+        },
+
         
         // Helper method to connect a user pair
         connectUserPair(user1, user2, pair, pairIndex) {

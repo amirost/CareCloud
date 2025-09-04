@@ -11,6 +11,7 @@ export function initUIManager(gameState) {
         returnToLevelsBtn: document.getElementById("returnToLevelsBtn"),
         homeBtn: document.getElementById("homeBtn"),
         resetBtn: document.getElementById("resetBtn"),
+        restorePlayerSolutionBtn: document.getElementById("restorePlayerSolutionBtn"),
         toggleCapacityBtn: document.getElementById("toggleCapacityBtn"),
         popupMessage: document.getElementById("popup-message"),
         connectedCount: document.getElementById("connected-count"),
@@ -49,6 +50,12 @@ export function initUIManager(gameState) {
             tooltip.classList.add('visible');
         },
 
+        showRestoreButton(show) {
+            if (ui.restorePlayerSolutionBtn) {
+                ui.restorePlayerSolutionBtn.style.display = show ? 'flex' : 'none';
+            }
+        },
+        
         updateCapacityButtonUI() {
             if (!ui.toggleCapacityBtn) return;
 

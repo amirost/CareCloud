@@ -20,6 +20,7 @@ export function initGameState() {
         usedLinks: new Map(), // Map of edge IDs to array of colors using that link
         currentPath: null,
         completedPaths: [],
+        playerSolutionBackup : null,
 
         showCapacityLabels: false,
 
@@ -39,6 +40,7 @@ export function initGameState() {
             this.completedPaths = [];
             this.showCapacityLabels = false; 
             this.applyingSolution = false;
+            this.playerSolutionBackup = null;
 
             // ** CORRECTION IMPORTANTE **
             // Réinitialiser les valeurs de consommation pour la barre de stats

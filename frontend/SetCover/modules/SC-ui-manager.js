@@ -20,6 +20,7 @@ export function initUIManager(gameState) {
         consumptionGauge: document.getElementById("consumption-gauge"),
         consumptionPercentage: document.getElementById("consumption-percentage"),
         userItemsContainer: document.getElementById("user-items-container"),
+        restorePlayerSolutionBtn: document.getElementById("restorePlayerSolutionBtn"),
 
         gameTooltip: null
     };
@@ -53,7 +54,12 @@ export function initUIManager(gameState) {
             ui.gameTooltip.classList.remove('visible');
         },
 
-
+        showRestoreButton(show) {
+            if (ui.restorePlayerSolutionBtn) {
+                // On utilise 'flex' car c'est le display par défaut de .tool-button
+                ui.restorePlayerSolutionBtn.style.display = show ? 'flex' : 'none';
+            }
+        },
         // Display the list of graphs
         displayGraphList(graphs, graphLoader) {
             ui.graphList.innerHTML = "";

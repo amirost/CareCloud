@@ -202,7 +202,7 @@ export function createRVStyles(gameState) {
 
 
       { selector: 'edge.path', style: { 'width': 4, 'line-cap': 'round' } },
-      { selector: 'edge[parallel]', style: { 'curve-style': 'unbundled-bezier', 'control-point-distances': function(ele) { return ele.data('offset') || 0; }, 'control-point-weights': [0.5], 'width': 2.5, 'edge-distances': 'node-position', 'source-endpoint': '0% 50%', 'target-endpoint': '100% 50%' } },
+      //{ selector: 'edge[parallel]', style: { 'curve-style': 'unbundled-bezier', 'control-point-distances': function(ele) { return ele.data('offset') || 0; }, 'control-point-weights': [0.5], 'width': 2.5, 'edge-distances': 'node-position', 'source-endpoint': '0% 50%', 'target-endpoint': '100% 50%' } },
       { selector: 'edge.at-capacity', style: { 'border-width': 1, 'border-color': '#FF5722', 'border-opacity': 0.8 } },
       { selector: '.path-complete', style: { 'shadow-blur': 5, 'shadow-color': '#4CAF50', 'shadow-opacity': 0.5, 'shadow-offset-x': 0, 'shadow-offset-y': 0 } },
       { selector: '.error', style: { 'border-width': 3, 'border-color': '#F44336', 'border-opacity': 1, 'shadow-blur': 10, 'shadow-color': '#F44336', 'shadow-opacity': 0.6 } }

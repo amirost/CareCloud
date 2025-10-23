@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
             router: 1,
             antenna: 1,
             user: 1,
+            cloud: 1,
             server: 1,
             connection: 1,
             client: 1,
@@ -87,7 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Exposed createAntennaConsumptionToggle function for external access
         createAntennaConsumptionToggle: function() {
             // Only add for RV or SC mode
-            if (this.activeMode !== "RV" && this.activeMode !== "SC") return;
+            if (this.activeMode !== "RV" && this.activeMode !== "SC" && this.activeMode !== "Cloud" ) return;
             
             // Remove existing antenna toggles to prevent duplicates
             const existingToggles = document.querySelectorAll(".antenna-toggle-container");
@@ -210,7 +211,11 @@ document.addEventListener("DOMContentLoaded", () => {
             { text: "Ajouter Antenne", action: "ajouter-antenne" }
         ],
         "Cloud": [
-
+            { text: "Ajouter Routeur", action: "ajouter-routeur" },
+            { text: "Ajouter Antenne", action: "ajouter-antenne" },
+            { text: "Ajouter Paire Clients", action: "ajouter-paire-clients" },
+            { text: "Ajouter Client Cloud", action: "ajouter-client-cloud" },
+            { text: "Ajouter Cloud", action: "ajouter-cloud" }
         ]
     };
     
@@ -273,39 +278,76 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Function to display mode-specific buttons
-    function showModeButtons(mode) {
-        // Remove any existing dynamic buttons
-        const existingButtons = document.querySelectorAll(".dynamic-button");
-        existingButtons.forEach(button => button.remove());
+    window.graphEditor.showModeButtons = function(mode) {
+        // Vider complètement la zone des boutons
+        editorButtonsContainer.innerHTML = '';
         
-        // Remove any existing antenna toggle containers
-        const existingToggles = document.querySelectorAll(".antenna-toggle-container");
-        existingToggles.forEach(toggle => toggle.remove());
-        
-        // Store active mode
+        // Stocker le mode actif
         window.graphEditor.activeMode = mode;
         
-        // Create and add buttons for the selected mode
+        // 1. Créer les boutons spécifiques au mode (Routeur, Client, etc.)
         if (modeButtons[mode]) {
             modeButtons[mode].forEach(item => {
                 const button = document.createElement("button");
                 button.className = "dynamic-button";
                 button.textContent = item.text;
                 button.setAttribute("data-action", item.action);
-                
                 editorButtonsContainer.appendChild(button);
             });
         }
         
-        // Create antenna consumption toggle for RV and SC modes
-        if (mode === "RV" || mode === "SC") {
-            window.graphEditor.createAntennaConsumptionToggle();
+        // 2. Créer le toggle pour la consommation des antennes (si nécessaire)
+        if (mode === "RV" || mode === "SC" || mode === "Cloud") {
+            const toggleContainer = document.createElement('div');
+            toggleContainer.className = 'antenna-toggle-container';
+            const toggleLabel = document.createElement('label');
+            toggleLabel.textContent = 'Consommation des antennes:';
+            toggleLabel.className = 'antenna-toggle-label';
+            toggleContainer.appendChild(toggleLabel);
+            const toggle = document.createElement('input');
+            toggle.type = 'checkbox';
+            toggle.id = 'antennaConsumptionToggle';
+            toggle.checked = window.graphEditor.antennaSettings.consumptionEnabled;
+            toggle.addEventListener('change', () => {
+                window.graphEditor.antennaSettings.consumptionEnabled = toggle.checked;
+                if (window.cytoscapeEditor && window.cytoscapeEditor.updateAntennaConsumption) {
+                    window.cytoscapeEditor.updateAntennaConsumption();
+                }
+                if (window.graphEditor.selectedElement && window.graphEditor.selectedElement.data('type') === 'antenna' && window.cytoscapeEditor.refreshNodeProperties) {
+                    window.cytoscapeEditor.refreshNodeProperties(window.graphEditor.selectedElement);
+                }
+            });
+            toggleContainer.appendChild(toggle);
+            editorButtonsContainer.appendChild(toggleContainer);
         }
 
-        // Ajouter le bouton de capacité globale
-        window.graphEditor.addGlobalCapacityButton();
+        // 3. Créer le bouton de capacité globale (si nécessaire)
+        if (mode === "RV" || mode === "SC") {
+            const capacityButton = document.createElement("button");
+            capacityButton.className = "dynamic-button capacity-all-button";
+            capacityButton.textContent = "Définir capacité de tous les liens";
+            capacityButton.addEventListener("click", () => {
+                window.graphEditor.setAllEdgesCapacity();
+            });
+            editorButtonsContainer.appendChild(capacityButton);
+        }
 
-        window.graphEditor.addCourseEditorButton();
+        // 4. Créer le bouton de l'éditeur de cours
+        if (!document.getElementById("courseEditorBtn")) {
+            const courseEditorBtn = document.createElement("button");
+            courseEditorBtn.id = "courseEditorBtn";
+            courseEditorBtn.className = "dynamic-button";
+            courseEditorBtn.innerHTML = '<i class="fas fa-book"></i> Course Editor';
+            courseEditorBtn.addEventListener("click", function() {
+                if (window.courseEditor) {
+                    if (!window.courseEditor.isInitialized) {
+                        window.courseEditor.init();
+                    }
+                    window.courseEditor.toggleCourseEditor();
+                }
+            });
+            editorButtonsContainer.appendChild(courseEditorBtn);
+        }
     }
 
     // Add event listener for "Create New Level" button
@@ -317,7 +359,7 @@ document.addEventListener("DOMContentLoaded", () => {
         window.graphEditor.resetCounters();
         
         // Show the buttons specific to the selected mode
-        showModeButtons(selectedMode);
+        window.graphEditor.showModeButtons(selectedMode);
         
         // Show the Cytoscape container
         cyContainer.style.display = "block";

@@ -69,14 +69,46 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
     try {
+      // Collect all the nodes
       const nodes = [];
       window.cy.nodes().forEach(node => {
         if (node.data('type') === 'antenna-halo') return;
-        const nodeData = { id: node.id(), type: node.data('type'), x: Math.round(node.position('x')), y: Math.round(node.position('y')) };
+        
+        const nodeData = {
+          id: node.id(),
+          type: node.data('type'),
+          x: Math.round(node.position('x')),
+          y: Math.round(node.position('y')),
+          userType: node.data('userType'),
+          parentId: node.data('parentId')
+        };
+        
+
+        // On s'assure de sauvegarder TOUTES les données pertinentes de l'antenne
         if (node.data('type') === 'antenna') {
           nodeData.radius = node.data('radius');
           nodeData.haloId = node.data('haloId');
           nodeData.consumption = node.data('consumption') || 0;
+          nodeData.consumptionBase = node.data('consumptionBase') || 0;
+          nodeData.consumptionRadiusEnabled = node.data('consumptionRadiusEnabled') || false;
+        }
+
+        if (node.data('servers')) {
+          // On reconstruit le tableau pour garantir que toutes les propriétés sont présentes
+          nodeData.servers = node.data('servers').map(server => ({
+            id: server.id,
+            name: server.name,
+            capacity: server.capacity,
+            consumption: server.consumption || 0 // On ajoute une valeur par défaut de 0 si absente
+          }));
+        }
+        
+        if (node.data('tasks')) {
+          nodeData.tasks = node.data('tasks').map(task => ({
+            id: task.id,
+            name: task.name,
+            charge: task.charge
+          }));
         }
         nodes.push(nodeData);
       });
@@ -232,6 +264,25 @@ document.addEventListener("DOMContentLoaded", () => {
             const color = userColors[colorIndex];
             userNode.style('background-color', color);
         });
+      } else if (graph.mode === "Cloud") {
+        const pairingUsers = window.cy.nodes('[userType="pairing"]');
+        const cloudUsers = window.cy.nodes('[userType="cloud"]');
+
+        // Colorer les paires
+        const sortedPairingUsers = pairingUsers.sort((a, b) => (parseInt(a.id().match(/\d+/)[0] || 0) - parseInt(b.id().match(/\d+/)[0] || 0)));
+        for (let i = 0; i < sortedPairingUsers.length; i += 2) {
+            const color = userColors[Math.floor(i / 2) % userColors.length];
+            sortedPairingUsers[i].style('background-color', color);
+            if (i + 1 < sortedPairingUsers.length) {
+                sortedPairingUsers[i + 1].style('background-color', color);
+            }
+        }
+              // Colorer les clients cloud individuellement (avec une autre palette de couleurs ou en décalant l'index)
+        cloudUsers.forEach((userNode, index) => {
+            const colorIndex = (pairingUsers.length / 2 + index) % userColors.length;
+            const color = userColors[colorIndex];
+            userNode.style('background-color', color);
+        });
       }
 
       window.graphEditor.resetCounters();
@@ -240,15 +291,19 @@ document.addEventListener("DOMContentLoaded", () => {
         const id = node.id();
         const type = node.data('type');
         if (type === 'antenna-halo') return;
-        const match = id.match(/[A-Za-z]+(\d+)/);
+        
+        // On utilise une expression régulière plus générique pour l'ID
+        const match = id.match(/^[A-Za-z]+(\d+)$/);
         if (match && match[1]) {
           const num = parseInt(match[1]);
+          
+          // On mappe le préfixe de l'ID au nom du compteur
+          const prefix = id.charAt(0).toLowerCase();
           const counterMap = {
-            'router': 'router', 'antenna': 'antenna', 'user': 'user', 'server': 'server',
-            'client': 'client', 'vm': 'vm', 'storage': 'storage', 'network': 'network'
+            'r': 'router', 'a': 'antenna', 'u': 'user', 'c': 'cloud'
           };
-          const counterKey = counterMap[type];
-          if (counterKey) {
+          const counterKey = counterMap[prefix];
+          if (counterKey && window.graphEditor.counters[counterKey]) {
             window.graphEditor.counters[counterKey] = Math.max(window.graphEditor.counters[counterKey], num + 1);
           }
         }

@@ -20,6 +20,14 @@ export function initEventHandlers(gameState, uiManager) {
                 
                 // Skip clicks on halo nodes
                 if (node.data('type') === 'antenna-halo') return;
+
+                // Si on est en phase 5 et que la conso des antennes est active
+                if (gameState.phase === 5 && gameState.antennaSettings.consumptionEnabled) {
+                    if (node.data('type') === 'antenna') {
+                        gamePhases.toggleAntennaState(node);
+                        return;
+                    }
+                }
                 
                 console.log(`Node clicked: ${node.id()}, type: ${node.data('type')}, phase: ${gameState.phase}`);
                 

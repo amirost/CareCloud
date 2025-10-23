@@ -218,7 +218,8 @@ export function initGraphLoader(gameState, uiManager) {
                   type: node.type,
                   radius: node.radius || 50,
                   haloId: node.haloId || null,
-                  consumption: node.consumption || 0
+                  consumption: node.consumption || 0,
+                  active: true
                 },
                 position: {
                   x: node.x,
@@ -265,14 +266,27 @@ export function initGraphLoader(gameState, uiManager) {
               });
             });
             
-            // Store minimum consumption if available
+           if (graph.antennaSettings) {
+            console.log("aaaaaaaaaaaaaaa");
+                gameState.antennaSettings = graph.antennaSettings;
+                console.log("Antenna settings loaded from graph data:", gameState.antennaSettings);
+            } else {
+                // Fallback si la donnée n'existe pas dans la BDD pour ce niveau
+                gameState.antennaSettings = { consumptionEnabled: false };
+                console.log("bbbbbbbbbb");
+                console.log("No antenna settings found in graph data, using default (disabled).");
+            }
+            
             gameState.minimumConsumption = graph.minimumConsumption || null;
             gameState.optimalPathSolution = graph.optimalPathSolution || []; 
+            gameState.optimalAntennaSet = graph.optimalAntennaSet || [];
             gameState.courseContent = graph.courseContent || null;
             gameState.loadedGraphId = graph._id;
             
-            console.log("Graph loaded with minimum consumption:", gameState.minimumConsumption);
-            
+            // Initialiser toutes les antennes comme actives
+            gameState.cy.nodes('[type="antenna"]').forEach(antenna => {
+                gameState.activeAntennas.add(antenna.id());
+            });
             // Fit the graph in the viewport with padding
             gameState.cy.fit();
             

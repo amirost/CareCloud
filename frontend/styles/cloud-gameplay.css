@@ -1,0 +1,394 @@
+/* Cloud-gameplay.css - Styles for Cloud Mode Gameplay */
+
+/* Import shared styles */
+@import url('../styles/main.css');
+@import url('../styles/components/cytoscape.css');
+@import url('../styles/games/common.css');
+@import url('../styles/components/tool-buttons.css');
+@import url('../styles/components/panels.css');
+@import url('../styles/games/rv-game.css');
+
+/* --- STYLES GÉNÉRAUX PARTAGÉS (PRIS DE RV) --- */
+.game-tooltip {
+  position: absolute;
+  visibility: hidden;
+  opacity: 0;
+  background-color: rgba(22, 22, 22, 0.85);
+  color: #ffffff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  z-index: 1001;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+  transform: translate(-50%, -120%);
+}
+.game-tooltip.visible { visibility: visible; opacity: 1; }
+.tooltip-info { display: flex; justify-content: space-between; min-width: 150px; gap: 15px; }
+.tooltip-info span:first-child { font-weight: 600; }
+
+.optimal-marker-container {
+  position: absolute;
+  top: -25px;
+  height: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;
+  pointer-events: none;
+  transition: left 0.3s ease-in-out;
+  transform: translateX(-50%); 
+}
+.optimal-marker-label { background-color: #333; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+.optimal-marker-arrow { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 5px solid #333; }
+#optimal-marker-line { position: absolute; top: 25px; height: 15px; width: 3px; background-color: white; box-shadow: 0 0 5px black; border-radius: 2px; }
+
+
+/* --- STYLES POUR TOUTES LES POP-UPS DU JEU --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  border-radius: 12px;
+  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: var(--color-primary);
+  color: white;
+  flex-shrink: 0;
+}
+.modal-header h3 { margin: 0; font-size: 1.3rem; font-weight: 600; color: white; }
+.modal-body { padding: 20px; overflow-y: auto; flex-grow: 1; }
+.modal-footer { padding: 15px 20px; text-align: right; border-top: 1px solid rgba(255, 255, 255, 0.1); background-color: rgba(0, 0, 0, 0.1); flex-shrink: 0; }
+
+
+/* --- Styles pour l'Éditeur de Placement de Tâches --- */
+.modal-content.task-placement-editor {
+  width: 95%;
+  max-width: 1400px;
+  height: 90vh;
+  max-height: 800px;
+  background-color: #2c3e50;
+  color: #ecf0f1;
+}
+
+.client-navigation-bar { 
+    display: none; 
+}
+
+.placement-body { display: flex; gap: 20px; overflow: hidden; }
+.tasks-to-place-area {
+  flex: 0.4;
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.tasks-to-place-area h4 {
+  padding: 15px;
+  margin: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+  color: var(--color-accent);
+  font-size: 1.1em;
+}
+
+#tasks-to-place-list {
+  padding: 15px;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.client-task-group {
+  margin-bottom: 20px;
+}
+.client-task-group-header {
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+.client-task-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.task-card {
+  width: 150px;
+  background-color: #34495e;
+  border-radius: 6px;
+  padding: 8px;
+  border-left: 4px solid;
+  cursor: grab;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.task-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+.task-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+}
+.task-card-charge {
+  background-color: rgba(0,0,0,0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+.task-card.dragging {
+  opacity: 0.5;
+  cursor: grabbing;
+}
+
+.placement-servers-area {
+  flex-shrink: 0;
+  flex: 0.6;
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  overflow-y: auto;
+}
+
+.server-group-container {
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+  flex: 1;
+}
+.server-group-container h5 {
+    padding: 15px;
+    margin: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+    color: var(--color-accent);
+    font-size: 1.1em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#total-server-consumption {
+    font-size: 0.9em;
+    color: #bdc3c7;
+    font-weight: normal;
+}
+#total-server-consumption strong {
+    color: var(--color-accent);
+}
+
+.server-group {
+  display: flex;
+  gap: 20px;
+  align-items: flex-end;
+  padding: 15px;
+  flex-grow: 1;
+}
+
+.server-wrapper-gameplay {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    width: 120px;
+    flex-shrink: 0;
+}
+.server-info-gameplay { 
+    font-size: 12px; 
+    font-weight: bold; 
+    color: white; 
+    white-space: nowrap; 
+    width: 100%; 
+    text-align: center;
+    margin-bottom: 4px;
+}
+.server-column-gameplay { 
+    width: 100%; 
+    background-color: rgba(0, 0, 0, 0.2); 
+    border: 2px solid var(--grid-line); 
+    display: flex; 
+    flex-direction: column-reverse;
+    position: relative; 
+    transition: all 0.2s ease; 
+}
+.server-column-gameplay.drop-valid { border-color: var(--accent-success); box-shadow: 0 0 15px var(--accent-success); }
+.server-column-gameplay.drop-invalid { border-color: var(--accent-action); box-shadow: 0 0 15px var(--accent-action); }
+
+.server-wrapper-gameplay.is-off .server-column-gameplay {
+    filter: brightness(0.5);
+    border-style: dashed;
+}
+.server-wrapper-gameplay.is-off .server-info-gameplay {
+    opacity: 0.6;
+}
+
+.server-footer {
+    width: 100%;
+    margin-top: 8px;
+    text-align: center;
+}
+
+.server-consumption-info {
+    font-size: 11px;
+    color: #95a5a6;
+    margin-bottom: 6px;
+}
+.server-consumption-info strong {
+    color: #ecf0f1;
+}
+
+.power-toggle-btn {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid;
+    cursor: pointer;
+    width: 80%;
+    transition: all 0.2s ease;
+}
+.power-toggle-btn.is-on {
+    background-color: var(--accent-success);
+    color: #fff;
+    border-color: var(--accent-success);
+}
+.power-toggle-btn.is-off {
+    background-color: transparent;
+    color: var(--accent-action);
+    border-color: var(--accent-action);
+}
+.power-toggle-btn:hover {
+    filter: brightness(1.2);
+}
+
+.task-block {
+    width: 100%;
+    cursor: grab;
+    border: 1px solid #000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    text-shadow: 1px 1px 2px #000;
+    transition: all 0.2s ease;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.2) 1px, transparent 1px);
+    padding: 4px 0;
+    box-sizing: border-box;
+}
+.task-block:active { cursor: grabbing; }
+.task-block.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+    transform: scale(1.05);
+}
+
+.task-charge-value { font-size: 1.2em; font-weight: bold; }
+
+.placement-body .empty-state { width: 100%; text-align: center; align-self: center; color: #bdc3c7; font-style: italic; }
+
+
+/* --- Styles pour la pop-up d'info des tâches --- */
+.modal-content.info-panel {
+  width: 90%;
+  max-width: 600px;
+  background-color: #34495e;
+  color: #ecf0f1;
+  max-height: 50vh;
+}
+
+#task-info-display-area {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: min-content;
+  gap: 15px;
+  align-content: flex-start;
+  overflow-y: auto;
+  min-height: 150px;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 15px;
+  border-radius: 8px;
+}
+
+
+.task-card.is-placed-elsewhere {
+  filter: grayscale(80%) brightness(0.7);
+  cursor: not-allowed;
+  border-left-color: #6c757d !important; /* Couleur neutre */
+}
+
+.task-card.is-placed-elsewhere:hover {
+  transform: none; /* Pas d'effet de survol */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Style pour le petit label d'information */
+.placement-info {
+  font-size: 10px;
+  font-style: italic;
+  color: #bdc3c7;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.global-consumption-info {
+    font-size: 0.8em;
+    font-weight: normal;
+    color: #bdc3c7;
+    margin-left: 2px; /* Aligner sous le titre */
+}
+.global-consumption-info strong {
+    color: #fff;
+    font-weight: bold;
+}
+
+/* Conso des serveurs cloud dans sa section */
+.cloud-consumption-info {
+    font-size: 0.9em;
+    color: #bdc3c7;
+    font-weight: normal;
+}
+.cloud-consumption-info strong {
+    color: var(--color-accent);
+}
+/* --- Keyframes pour les animations (partagés) --- */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes bounceIn {
+  0% { opacity: 0; transform: scale(0.8); }
+  70% { opacity: 1; transform: scale(1.05); }
+  100% { transform: scale(1); }
+}

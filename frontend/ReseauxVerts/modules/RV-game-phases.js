@@ -496,44 +496,122 @@ resetPair(pairIndex) {
         
         // Reset the game
         resetGame() {
-            // 1. Sauvegarder la valeur de l'objectif avant que `gameState.reset()` ne l'efface.
+            console.log("Resetting game state...");
+            
             const savedMinimumConsumption = gameState.minimumConsumption;
 
-            // Remove all virtual edges
+            // Nettoyage visuel et des données
             gameState.cy.edges('[virtual]').remove();
-            
-            // Reset edge states
-            gameState.cy.edges().forEach(edge => {
+            gameState.cy.edges(':not([virtual])').forEach(edge => {
                 edge.data('used', true);
                 edge.removeClass('unused');
             });
-            
-            // Reset node states
             gameState.cy.nodes().removeClass('available selected');
-            
-            // Reset pair connection status
             gameState.userPairs.forEach(pair => {
                 pair.connected = false;
             });
-            
-            // Reset game state (ce qui met minimumConsumption à null)
-            gameState.reset();
 
-            // ** LA CORRECTION EST ICI **
-            // 2. Restaurer la valeur de l'objectif après le reset.
-            gameState.minimumConsumption = savedMinimumConsumption;
+            // Réinitialise les données de progression du joueur
+            gameState.reset();
             
-            // Rafraîchir la vue pour enlever les anciens chemins parallèles
+            // Restaure les propriétés du NIVEAU
+            gameState.minimumConsumption = savedMinimumConsumption;
+
+            // Réinitialise l'état visuel à "tout est allumé"
+            if (gameState.antennaSettings.consumptionEnabled) {
+                gameState.cy.nodes('[type="antenna"]').forEach(antenna => {
+                    antenna.data('active', true);
+                    gameState.activeAntennas.add(antenna.id()); // Repeupler le set
+                    this.updateAntennaAppearance(antenna, true);
+                });
+            }
+
             if (eventHandlers && eventHandlers.refreshAllEdgeVisuals) {
                 eventHandlers.refreshAllEdgeVisuals();
             }
-            uiManager.updateCapacityButtonUI();
-            // Mettre à jour les stats (ce qui redessinera la barre avec l'objectif)
+
+            // ** LA CORRECTION EST ICI **
+            // On appelle updateStats UNE SEULE FOIS, à la toute fin,
+            // quand l'état visuel et les données sont 100% synchronisés.
             uiManager.updateStats();
             
-            // Start from phase 1
+            uiManager.updateCapacityButtonUI();
             this.startPhase1();
-        }
+        },
+
+        toggleAntennaState(antennaNode) {
+            // Cette fonction ne s'exécute qu'en phase 5 si la conso des antennes est activée
+            if (gameState.phase !== 5 || !gameState.antennaSettings.consumptionEnabled) return;
+
+            const antennaId = antennaNode.id();
+            const isActive = antennaNode.data('active');
+
+            // Vérifier si l'antenne est utilisée par un chemin
+            let isAntennaInUse = false;
+            for (const pathData of gameState.completedPaths) {
+                if (pathData.path.includes(antennaId)) {
+                    isAntennaInUse = true;
+                    break;
+                }
+            }
+
+            // On ne peut pas éteindre une antenne en cours d'utilisation
+            if (isActive && isAntennaInUse) {
+                uiManager.showNotification("Cette antenne est utilisée par un chemin et ne peut être éteinte.", "error");
+                return;
+            }
+            
+            const newActiveState = !isActive;
+
+            // Animation "-X W" uniquement quand on éteint
+            if (newActiveState === false) {
+                const gaugeBar = document.getElementById('consumption-gauge');
+                if (gaugeBar) {
+                    const tempTarget = document.createElement('div');
+                    const gaugeRect = gaugeBar.getBoundingClientRect();
+                    tempTarget.style.position = 'absolute';
+                    tempTarget.style.left = `${gaugeRect.right}px`; 
+                    tempTarget.style.top = `${gaugeRect.top}px`;
+                    document.body.appendChild(tempTarget);
+                    const consumptionSaved = antennaNode.data('consumption') || 0;
+                    uiManager.createFloatingText(`-${consumptionSaved.toFixed(0)} W`, tempTarget, 'minus');
+                    setTimeout(() => document.body.removeChild(tempTarget), 10);
+                }
+            }
+            
+            // Mise à jour des données
+            antennaNode.data('active', newActiveState);
+            if (newActiveState) {
+                gameState.activeAntennas.add(antennaId);
+            } else {
+                gameState.activeAntennas.delete(antennaId);
+            }
+            
+            // Mise à jour visuelle (on a besoin d'une fonction pour ça)
+            this.updateAntennaAppearance(antennaNode, newActiveState);
+            
+            // Mise à jour des stats
+            uiManager.updateStats();
+        },
+
+        updateAntennaAppearance(antennaNode, isActive) {
+            if (!antennaNode || antennaNode.length === 0) return;
+            
+            // Appliquer le style directement sur le nœud
+            if (isActive) {
+                antennaNode.style('background-image', '../../../icons/antenna_icon_on_white.png');
+            } else {
+                antennaNode.style('background-image', '../../../icons/antenna_icon_off_white.png');
+            }
+            // Mettre à jour le halo (on a besoin de la fonction setHaloVisibility)
+            const haloNode = gameState.cy.getElementById(antennaNode.data('haloId'));
+            if (haloNode.length > 0) {
+                // Pour cela, il nous faut setHaloVisibility dans RV-styles.js
+                if (window.setHaloVisibility) {
+                    window.setHaloVisibility(haloNode, isActive);
+                }
+            }
+        },
     
     };
     

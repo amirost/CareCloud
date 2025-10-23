@@ -83,60 +83,108 @@ document.addEventListener("DOMContentLoaded", () => {
   
   // Function to handle node clicks for automatic link creation
   function handleNodeClick(node) {
-    // Si we're in SC mode, only handle node selection but don't create edges
-    if (window.graphEditor.activeMode === "SC") {
-      window.cy.elements().unselect();
+    // SC Mode or User Node: simple selection only
+    if (window.graphEditor.activeMode === "SC" || node.data('type') === 'user') {
+      window.cy.elements().not(node).unselect();
       node.select();
-      console.log("Selected node in SC mode:", node.id());
       window.cytoscapeEditor.propertiesManager.showNodeProperties(node);
       return;
     }
-  
-    // Si the node is a user, just select it but don't use for connections
-    if (node.data('type') === 'user') {
-      window.cy.elements().unselect();
-      node.select();
-      console.log("Selected user node:", node.id());
-      window.cytoscapeEditor.propertiesManager.showNodeProperties(node);
-      return;
+
+    // --- Special interaction nodes (Cloud Mode) ---
+    // If the clicked node is a task creator, open its specific editor
+    if (node.data('type') === 'task-creator') {
+        console.log(`Opening task editor for ${node.id()}`);
+        window.cytoscapeEditor.propertiesManager.showTaskEditorPopup(node);
+        // If a source node was selected for linking, cancel it.
+        if (sourceNode) {
+            sourceNode.unselect();
+            sourceNode = null;
+        }
+        return;
+    }
+
+    // If the clicked node is a phone config, open its specific editor
+    if (node.data('type') === 'phone-config') {
+        console.log(`Opening server editor for ${node.id()}`);
+        window.cytoscapeEditor.propertiesManager.showServerEditorPopup(node);
+        // Cancel any pending link creation
+        if (sourceNode) {
+            sourceNode.unselect();
+            sourceNode = null;
+        }
+        return;
     }
     
-    // Si we don't have a source node yet, set this as source
+    // --- Link creation logic (for RV and Cloud modes) ---
+
+    // Case 1: No source node is selected yet.
     if (!sourceNode) {
       sourceNode = node;
-      window.cy.elements().unselect();
-      sourceNode.select(); // Select the source
+      window.cy.elements().not(sourceNode).unselect();
+      sourceNode.select();
       window.cytoscapeEditor.propertiesManager.showNodeProperties(node);
       console.log("Selected source node:", sourceNode.id());
-    } 
-    // Si we already have a source node, create the edge
-    else {
-      // Don't connect a node to itself
-      if (sourceNode.id() === node.id()) {
-        console.log("Impossible de connecter un nœud à lui-même.");
-        window.cy.elements().unselect();
-        sourceNode = null;
-        return;
-      }
-      
-      // Vérifier si on tente de connecter deux antennes
-      if (sourceNode.data('type') === 'antenna' && node.data('type') === 'antenna') {
-        window.cy.elements().unselect();
-        sourceNode = null;
-        return;
-      }
-      
-      // Create the edge
-      const edge = window.cytoscapeEditor.edgeManager.createEdge(sourceNode, node);
-      
-      // Show properties of the newly created edge
-      window.cy.elements().unselect();
-      edge.select();
-      window.cytoscapeEditor.propertiesManager.showEdgeProperties(edge);
-      
-      // Reset source node reference
-      sourceNode = null;
+      return;
     }
+
+    // Case 2: The same node is clicked again (deselect)
+    if (sourceNode.id() === node.id()) {
+      console.log("Deselecting the source node.");
+      sourceNode.unselect();
+      sourceNode = null;
+      window.graphEditor.hidePropertiesPanel();
+      return;
+    }
+
+    // Case 3: A second, different node is clicked.
+    
+    // --- Validation Rules ---
+    const sourceType = sourceNode.data('type');
+    const targetType = node.data('type');
+    
+    console.log(`Attempting to connect: ${sourceType} -> ${targetType}`);
+
+    const validConnections = {
+        'router': ['router', 'antenna', 'cloud'],
+        'antenna': ['router'],
+        'cloud': ['router']
+    };
+    
+    // Rule 1: Source node type must be able to start a connection.
+    if (!validConnections[sourceType]) {
+        console.log(`Invalid Action: Cannot start a connection from a "${sourceType}".`);
+        sourceNode.unselect();
+        sourceNode = null;
+        window.graphEditor.hidePropertiesPanel();
+        return;
+    }
+
+    // Rule 2: Target node type must be valid for the source.
+    if (!validConnections[sourceType].includes(targetType)) {
+        console.log(`Invalid Action: Connection not allowed between "${sourceType}" and "${targetType}".`);
+        
+        // Special case: if user tries antenna -> antenna, just switch selection.
+        if (sourceType === 'antenna' && targetType === 'antenna') {
+            sourceNode.unselect();
+            sourceNode = node;
+            sourceNode.select();
+            window.cytoscapeEditor.propertiesManager.showNodeProperties(node);
+        }
+        return;
+    }
+    
+    // --- If validation passes, create the edge ---
+    console.log(`Valid connection: ${sourceType} -> ${targetType}. Creating edge.`);
+    const edge = window.cytoscapeEditor.edgeManager.createEdge(sourceNode, node);
+    if (edge) {
+        window.cy.elements().unselect();
+        edge.select();
+        window.cytoscapeEditor.propertiesManager.showEdgeProperties(edge);
+    }
+    
+    // Reset the source node after the link is created
+    sourceNode = null; 
   }
   
   // Function to handle edge clicks to show properties

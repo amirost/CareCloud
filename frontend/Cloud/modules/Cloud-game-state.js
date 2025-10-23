@@ -1,56 +1,57 @@
 // rv-game-state.js - Manages the game state and constants
 
 export function initGameState() {
-    // Game state variables
     const gameState = {
-        // Cytoscape instance
         cy: null,
-        
-        // Game phases
         phase: 1,
         
-        // User tracking
+        // --- PROPRIÉTÉS HÉRITÉES DE RV ---
         selectedUser: null,
         selectedUserColor: null,
         currentUserPair: 0,
-        userPairs: [],
+        userPairs: [], // Pour les utilisateurs en paires
         connectedUsers: new Set(),
-        
-        // Network tracking
-        usedLinks: new Map(), // Map of edge IDs to array of colors using that link
+        usedLinks: new Map(),
         currentPath: null,
         completedPaths: [],
-        playerSolutionBackup : null,
-
+        playerSolutionBackup: null,
         showCapacityLabels: false,
-
-        initialConsumption: 0,     // Consommation si tous les liens sont utilisés
-        minimumConsumption: null,  // Consommation cible (solution optimale)
         applyingSolution: false,
-
+        connectionTarget: 'user',
+        
+        clients: [], // Pour stocker les données des clients cloud (tâches, etc.)
+        cloudNode: null, // Référence au nœud Cloud principal
+        
+        // Propriétés de niveau
         antennaSettings: { consumptionEnabled: false },
         activeAntennas: new Set(),
-        // Reset game state
+        initialConsumption: 0,
+        minimumConsumption: null,
+        optimalPathSolution: [],
+        optimalAntennaSet: [],
+        
         reset: function() {
             this.phase = 1;
             this.selectedUser = null;
             this.selectedUserColor = null;
             this.currentUserPair = null;
+            this.userPairs = [];
             this.connectedUsers = new Set();
             this.usedLinks = new Map();
             this.currentPath = null;
             this.completedPaths = [];
+            this.playerSolutionBackup = null;
             this.showCapacityLabels = false; 
             this.applyingSolution = false;
-            this.playerSolutionBackup = null;
+            this.connectionTarget = 'user';
 
-            // Réinitialiser les valeurs de consommation pour la barre de stats
-            //this.initialConsumption = 0;
-            this.minimumConsumption = null;
-
-            //this.antennaSettings = { consumptionEnabled: false };
+            this.clients = [];
+            this.cloudNode = null;
+            
+            this.antennaSettings = { consumptionEnabled: false };
             this.activeAntennas = new Set();
-        }
+            // `initialConsumption` et `minimumConsumption` ne sont pas réinitialisés ici
+        },
     };
     
     // Array of 20 distinct colors for user pairs

@@ -113,6 +113,63 @@ const cytoscapeStyle = [
     }
   },
   
+
+  {
+    selector: 'node[type="cloud"]',
+    style: {
+      'shape': 'round-rectangle',
+      'background-color': '#d0e1f9', // Un bleu très clair
+      'width': 80, // Plus grand que les autres
+      'height': 60,
+      'border-width': 2,
+      'border-color': '#4d648d',
+      'background-image': '../icons/cloud_icon.png', // Vous devrez créer cette icône
+      'background-fit': 'contain',
+      'background-height': '60%',
+      'background-width': '60%'
+    }
+  },
+
+  {
+    selector: 'node[userType="cloud"]', // Style pour les utilisateurs qui se connectent au cloud
+    style: {
+        'background-image': '../icons/user_cloud_icon.png' // Une icône différente
+    }
+  },
+
+  {
+    selector: 'node[type="phone-config"]',
+    style: {
+      'shape': 'ellipse',
+      'background-color': '#FFFFFF',
+      'width': 25,
+      'height': 25,
+      'border-width': 2,
+      'border-color': '#283655',
+      'background-image': '../icons/phone_icon.png', // Vous devrez créer cette icône
+      'background-fit': 'contain',
+      'background-height': '70%',
+      'background-width': '70%',
+      'label': ''
+    }
+  },
+
+  {
+    selector: 'node[type="task-creator"]',
+    style: {
+      'shape': 'ellipse',
+      'background-color': '#FFFFFF',
+      'width': 25,
+      'height': 25,
+      'border-width': 2,
+      'border-color': '#d08159',
+      'background-image': '../icons/task_icon.png', // Ou une icône de point d'exclamation
+      'background-fit': 'contain',
+      'background-height': '70%',
+      'background-width': '70%',
+      'label': ''
+    }
+  },
   // Edge capacity styling - different colors based on capacity with same white transparent base
   {
     selector: 'edge[capacity = 1]',

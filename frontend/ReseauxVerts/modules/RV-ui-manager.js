@@ -147,90 +147,51 @@ export function initUIManager(gameState) {
         
         // Update game statistics
         updateStats() {
-          // Update connected users count
           ui.connectedCount.textContent = gameState.connectedUsers.size;
-          
-          // Calculate current consumption
           let totalConsumption = 0;
-          let initialConsumption = 0;
           
-          // Add consumption from all links (for initial max value)
+          // Si initialConsumption n'a pas encore été calculé pour ce niveau, on le fait.
+          if (gameState.initialConsumption === 0 && gameState.cy) {
+              let initialCalc = 0;
+              // Calcul de la conso max des liens
+              gameState.cy.edges(':not([virtual])').forEach(edge => {
+                  initialCalc += edge.data('consumption') || 0;
+              });
+              // Calcul de la conso max des antennes (si activé)
+              if (gameState.antennaSettings.consumptionEnabled) {
+                  gameState.cy.nodes('[type="antenna"]').forEach(antenna => {
+                      initialCalc += antenna.data('consumption') || 0;
+                  });
+              }
+              gameState.initialConsumption = initialCalc;
+              console.log(`Initial Consumption calculated for this level: ${gameState.initialConsumption}`);
+          }
+          
+          // Maintenant, on calcule juste la consommation actuelle
           if (gameState.cy) {
-              gameState.cy.edges().forEach(edge => {
-                  if (!edge.data('virtual')) {
-                      initialConsumption += edge.data('consumption') || 0;
-                      
-                      // Only add consumption for used links in current value
-                      if (edge.data('used')) {
-                          totalConsumption += edge.data('consumption') || 0;
-                      }
+              gameState.cy.edges(':not([virtual])').forEach(edge => {
+                  if (edge.data('used')) {
+                      totalConsumption += edge.data('consumption') || 0;
                   }
               });
+              if (gameState.antennaSettings.consumptionEnabled) {
+                  gameState.cy.nodes('[type="antenna"]').forEach(antenna => {
+                      if (antenna.data('active')) {
+                          totalConsumption += antenna.data('consumption') || 0;
+                      }
+                  });
+              }
           }
           
-          // Store initial consumption if not already set
-          if (!gameState.initialConsumption && initialConsumption > 0) {
-              gameState.initialConsumption = initialConsumption;
-          }
-          
-          // Use stored initial value if available
-          const maxConsumption = gameState.initialConsumption || initialConsumption;
-          
-          // Update consumption display
+          const maxConsumption = gameState.initialConsumption;
           ui.consumption.textContent = totalConsumption.toFixed(0);
           
-          // Update the energy savings gauge
           this.updateEnergySavingsGauge(totalConsumption, maxConsumption);
           
-          // Update pair buttons to reflect current state
           this.updatePairButtons();
-
-          // --- DÉBUT DE LA LOGIQUE D'AIDE CONTEXTUELLE AVEC LOGS ---
-
-          console.groupCollapsed('Vérification du message d\'aide contextuelle');
-
-          const isWin = gameState.solutionValidator ? gameState.solutionValidator.checkWinCondition() : false;
-          console.log(`Condition de victoire atteinte ? : ${isWin}`);
-          console.log(`Phase actuelle du jeu : ${gameState.phase}`);
-
-          // On n'affiche le message d'aide que si on n'a pas gagné et qu'on est en phase 5
-          if (!isWin && gameState.phase === 5) {
-            console.log("--> Entrée dans la logique de la phase 5.");
-            
-            let hasUnusedLinksOn = false;
-            let unusedLinksStillOn = []; // Pour un log plus détaillé
-
-            gameState.cy.edges(':not([virtual])').forEach(edge => {
-              const isLinkInAPath = gameState.usedLinks.has(edge.id());
-              const isLinkVisuallyOn = edge.data('used');
-
-              // Un lien "inutilisé mais allumé" est un lien qui n'est dans aucun chemin mais dont la donnée 'used' est encore true.
-              if (!isLinkInAPath && isLinkVisuallyOn) {
-                hasUnusedLinksOn = true;
-                unusedLinksStillOn.push(edge.id());
-              }
-            });
-
-            console.log(`Y a-t-il des liens inutilisés encore allumés ? : ${hasUnusedLinksOn}`);
-            if (hasUnusedLinksOn) {
-              console.log("--> Liens à éteindre détectés :", unusedLinksStillOn);
-              console.log("--> Le message d'aide au reroutage ne sera PAS affiché.");
-            } else {
-              console.log("--> Aucun lien inutilisé allumé n'a été trouvé.");
-              console.log("--> Affichage du message d'aide au reroutage.");
-              // Si tous les liens inutilisés sont bien éteints, MAIS qu'on n'a pas gagné...
-              // C'est le moment d'afficher le message d'aide pour le reroutage.
-              this.setPopupMessage("Essayez de rerouter des chemins (en cliquant sur <bold style=\"color: #ffffffff; border: 0px solid #ffffffff; border-radius: 5px; padding: 2px 4px; background: rgba(223, 86, 86, 0.9);\">Rerouter</bold> pour une paire) pour éteindre plus de liens et trouver la solution optimale.");
-            }
-          } else {
-            console.log("--> Conditions non remplies pour la logique d'aide (pas en phase 5 ou victoire déjà atteinte).");
-          }
-
-          console.groupEnd();
           
-          // --- FIN DE LA LOGIQUE D'AIDE CONTEXTUELLE ---
+          // ... (logique d'aide contextuelle)
           
-          // Check win condition and update progress if solution validator exists
           if (gameState.solutionValidator) {
               gameState.solutionValidator.updateProgressIndicator();
           }
@@ -242,54 +203,64 @@ export function initUIManager(gameState) {
 
             const targetConsumption = gameState.minimumConsumption;
 
+            // ** DÉBUT DES LOGS DE DÉBOGAGE **
+            console.groupCollapsed('[Debug Jauge] - updateEnergySavingsGauge');
+            console.log(`Valeur reçue : currentConsumption = ${currentConsumption}`);
+            console.log(`Valeur reçue : maxConsumption = ${maxConsumption}`);
+            console.log(`Cible chargée : targetConsumption = ${targetConsumption}`);
+            // ** FIN DES LOGS DE DÉBOGAGE **
+
             // Si on n'a pas encore de cible, on utilise l'ancienne logique de couleur.
             if (targetConsumption === null || targetConsumption === undefined) {
+                console.log("--> Décision : Pas de cible. Utilisation de la logique par défaut.");
                 if (maxConsumption === 0) {
                     ui.consumptionGauge.style.width = "0%";
                     ui.consumptionPercentage.textContent = "N/A";
-                    ui.consumptionGauge.style.backgroundColor = '#9e9e9e'; // Gris
+                    ui.consumptionGauge.style.backgroundColor = '#9e9e9e';
+                    console.log("--> Résultat : Barre à 0% (maxConsumption est 0).");
+                    console.groupEnd();
                     return;
                 }
                 const percentage = (currentConsumption / maxConsumption) * 100;
                 ui.consumptionGauge.style.width = `${Math.min(100, percentage)}%`;
                 ui.consumptionPercentage.textContent = `${Math.round(percentage)}% de la conso. max`;
                 
-                if (percentage <= 33) ui.consumptionGauge.style.backgroundColor = '#4CAF50'; // Vert
-                else if (percentage <= 66) ui.consumptionGauge.style.backgroundColor = '#FFC107'; // Jaune/Ambre
-                else ui.consumptionGauge.style.backgroundColor = '#F44336'; // Rouge
-                
+                if (percentage <= 33) ui.consumptionGauge.style.backgroundColor = '#4CAF50';
+                else if (percentage <= 66) ui.consumptionGauge.style.backgroundColor = '#FFC107';
+                else ui.consumptionGauge.style.backgroundColor = '#F44336';
+
+                console.log(`--> Résultat : Barre à ${percentage.toFixed(2)}% de largeur.`);
+                console.groupEnd();
                 return;
             }
 
             // --- NOUVELLE LOGIQUE DE COULEUR BASÉE SUR L'OBJECTIF ---
+            console.log("--> Décision : Une cible existe. Utilisation de la logique basée sur l'objectif.");
             const widthPercentage = (currentConsumption / maxConsumption) * 100;
             ui.consumptionGauge.style.width = `${Math.min(100, widthPercentage)}%`;
+            console.log(`Calcul de la largeur de la barre : (${currentConsumption} / ${maxConsumption}) * 100 = ${widthPercentage.toFixed(2)}%`);
             
             let color;
             // CAS 1 : On a atteint ou dépassé l'objectif (bravo !)
             if (currentConsumption <= targetConsumption) {
+                console.log("--> Sous-décision : Consommation actuelle <= Cible. La barre sera verte.");
                 color = '#4CAF50'; // Vert
                 ui.consumptionPercentage.textContent = "Objectif atteint !";
             } 
             // CAS 2 : On est au-dessus de l'objectif.
             else {
-                // On calcule à quel point on est "loin" de l'objectif.
-                // "Plage d'erreur" = (conso. max - objectif)
+                console.log("--> Sous-décision : Consommation actuelle > Cible. Calcul de la couleur orange/rouge.");
                 const rangeAboveTarget = maxConsumption - targetConsumption;
-                // "Écart" = (conso. actuelle - objectif)
                 const distanceFromTarget = currentConsumption - targetConsumption;
-
-                let severity = 0; // 0 = tout près de l'objectif, 1 = au max de la conso
+                let severity = 0;
                 if (rangeAboveTarget > 0) {
                     severity = Math.min(1, distanceFromTarget / rangeAboveTarget);
                 }
+                console.log(`Calcul de la "sévérité" : ${severity.toFixed(2)} (0=proche de l'objectif, 1=au max)`);
 
-                // Interpolation de couleur entre Jaune (proche de l'objectif) et Rouge (loin)
-                // Jaune: (255, 193, 7) -> #FFC107
-                // Rouge: (244, 67, 54) -> #F44336
-                const r = Math.round(255 + (244 - 255) * severity); // de 255 à 244
-                const g = Math.round(193 + (67 - 193) * severity);  // de 193 à 67
-                const b = Math.round(7 + (54 - 7) * severity);      // de 7 à 54
+                const r = Math.round(255 + (244 - 255) * severity);
+                const g = Math.round(193 + (67 - 193) * severity);
+                const b = Math.round(7 + (54 - 7) * severity);
                 color = `rgb(${r}, ${g}, ${b})`;
                 
                 const remainingEffort = distanceFromTarget.toFixed(0);
@@ -297,9 +268,10 @@ export function initUIManager(gameState) {
             }
 
             ui.consumptionGauge.style.backgroundColor = color;
+            console.log(`--> Résultat : Couleur appliquée = ${color}`);
             
-            // Afficher le marqueur de l'objectif (code inchangé)
             this.updateOptimalSolutionMarker(targetConsumption, maxConsumption);
+            console.groupEnd();
         },
 
         updateOptimalSolutionMarker(targetConsumption, maxConsumption) {

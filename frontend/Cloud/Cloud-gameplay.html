@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Green Networks</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../styles/cloud-gameplay.css">
+</head>
+<body>
+    <!-- Level Selection Section (shown first) -->
+    <div id="level-selection" class="level-selection">
+        <header>
+            <h1>Réseaux Verts - Choisissez un niveau</h1>
+            <button id="backHomeBtn" class="secondary-button">Accueil</button>
+        </header>
+        
+        <div id="graphListContainer" class="graph-list-container">
+            <h2>Liste des niveaux</h2>
+            <div id="graphListLoading">Chargement des niveaux...</div>
+            <ul id="graphList" class="graph-list"></ul>
+        </div>
+    </div>
+    
+    <!-- Gameplay Section (initially hidden) -->
+    <div id="gameplay" class="gameplay" style="display: none;">
+        <!-- Barre de navigation fixe en haut à gauche -->
+        <div class="left-panel">
+            <div class="navigation-bar">
+                <button id="homeBtn">Accueil</button>
+                <button id="resetBtn">Recommencer le niveau</button>
+                <button id="returnToLevelsBtn">Sélectionner un autre niveau</button>
+                
+            </div>
+
+            <!-- NEW: Tools Panel below navigation -->
+            <div class="tools-panel">
+                <button id="restorePlayerSolutionBtn" class="tool-button" title="Restaurer votre solution précédente" style="display: none; background-color: #6a1b9a;">
+                    <i class="fas fa-history"></i>
+                    Restaurer ma solution
+                </button>
+                <button id="findAllPathsBtn" class="tool-button" title="Connect all user pairs via shortest paths">
+                    <i class="fas fa-route"></i>
+                    Solution plus courts chemins
+                </button>
+                <button id="findNextPathBtn" class="tool-button" title="Connect next user pair via shortest path">
+                    <i class="fas fa-shoe-prints"></i>
+                    1 plus court chemin
+                </button>
+                <button id="applyOptimalBtn" class="tool-button" title="Apply saved optimal solution">
+                    <i class="fas fa-star"></i>
+                    Solution optimale
+                </button>
+                
+
+                <button id="toggleCapacityBtn" class="tool-button" title="Afficher/Masquer les capacités des routes" style="margin-bottom: 20px;">
+                    <i class="fas fa-tag"></i>
+                    Afficher Capacités
+                </button>
+
+                <button id="showCourseBtn" class="tool-button" title="Show course content" style="margin-bottom: 20px;">
+                    <i class="fas fa-book-open"></i>
+                    Cours (infos)
+                </button>
+
+                <button id="resetViewBtn" class="tool-button" title="Reset graph view (fit to screen)">
+                    <i class="fas fa-expand-arrows-alt"></i>
+                    Centrer la vue
+                </button>
+            </div>
+
+        </div>
+
+        <div class="game-container">
+
+            <div class="main-game-area">
+                <div id="popup-container" class="popup-container">
+                    <div id="popup-message" class="popup-message">Sélectionez un utilisateur</div>
+                </div>
+                <div id="cy" class="cytoscape-container"></div>
+                
+                <!-- Stats en dessous de la carte -->
+                <div id="game-stats" class="game-stats-container">
+                    <div class="stats-row">
+                        <div class="stats-card">
+                            <div class="stats-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stats-info">
+                                <div class="stats-label">Utilisateurs Connectés</div>
+                                <div class="stats-value"><span id="connected-count">0</span>/<span id="total-users">0</span></div>
+                            </div>
+                        </div>
+                        
+                        <div class="stats-card">
+                            <div class="stats-icon">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div class="stats-info">
+                                <div class="stats-label">Consommation actuelle</div>
+                                <div class="stats-value"><span id="consumption">0</span> W</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="gauge-container">
+                        <div class="gauge-label">
+                            <span>Économie d'énergie</span>
+                            <span id="consumption-percentage">Enregistrez une solution (touche 's')</span>
+                        </div>
+                        <div class="gauge-track">
+                            <div id="consumption-gauge" class="gauge-fill"></div>
+                        </div>
+                        <div class="gauge-markers">
+                            <span>Faible</span>
+                            <span>Moyenne</span>
+                            <span>Élevée</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="rightpanel">
+            <div class="sidebar-panel">
+                <div class="sidebar-title">Paires d'utilisateurs</div>
+                <div id="user-pairs-container" class="user-pairs-container">
+                    <!-- User pair buttons will be dynamically created here -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+        <div id="task-placement-popup" class="modal-overlay" style="display: none;">
+        <div class="modal-content task-placement-editor">
+            <div class="modal-header">
+            <h3 id="task-placement-title">Placement des Tâches</h3>
+                <div>
+                    <h3 id="task-placement-title">Placement des Tâches</h3>
+                    <span id="global-consumption-info" class="global-consumption-info"></span>
+                </div>
+                <button id="close-task-placement-btn" class="close-button">&times;</button>
+            </div>
+            
+            <!-- Barre de navigation des clients -->
+            <div class="client-navigation-bar" id="client-navigation-bar">
+                <!-- Les boutons des clients seront ajoutés ici par le JS -->
+            </div>
+
+            <div class="modal-body placement-body">
+                <!-- Zone des tâches à placer (gauche) -->
+                <aside class="tasks-to-place-area">
+                    <h4>Tâches à placer</h4>
+                    <div id="tasks-to-place-list">
+                        <!-- Les tâches du client actif seront ajoutées ici -->
+                    </div>
+                </aside>
+
+                <!-- Zone des serveurs (droite) -->
+                 <main class="placement-servers-area">
+                    <div class="server-group-container" id="phone-servers-container">
+                         <h5>Serveurs du Téléphone</h5>
+                         <div class="server-group"></div>
+                     </div>
+                    <div class="server-group-container" id="cloud-servers-container">
+                         <h5>Serveurs du Cloud</h5>
+                         <div class="server-group"></div>
+                     </div>
+                </main>
+            </div>
+
+            <div class="modal-footer">
+                <button id="save-and-close-placement-btn" class="primary-button">Terminer le Placement</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="task-info-popup" class="modal-overlay" style="display: none;">
+        <div class="modal-content info-panel">
+            <div class="modal-header">
+                <h3 id="task-info-title">Tâches du Client</h3>
+                <button id="close-task-info-btn" class="close-button">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="task-display-area" id="task-info-display-area">
+                    <!-- Les tâches seront affichées ici -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.25.0/cytoscape.min.js"></script>  
+    <!-- Module Loader Script -->
+    <script src="Cloud-gameplay-main.js" type="module"></script>
+    <!-- Keep for backwards compatibility if needed -->
+    <script src="../graphSaverLoader.js"></script>
+</body>
+</html>

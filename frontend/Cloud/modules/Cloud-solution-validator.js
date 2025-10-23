@@ -29,28 +29,55 @@ export function initSolutionValidator(gameState, uiManager) {
       });
     },
     
-    getCurrentConsumption() {
+getCurrentConsumption() {
+      console.groupCollapsed("--- DEBUG: solutionValidator.getCurrentConsumption() ---");
       let totalConsumption = 0;
       
       if (gameState.cy) {
-        // a) Ajouter la consommation des liens utilisés
+        // a) Consommation des liens utilisés
+        let linksConsumption = 0;
         gameState.cy.edges(':not([virtual])').forEach(edge => {
           if (edge.data('used')) {
-            totalConsumption += edge.data('consumption') || 0;
+            linksConsumption += edge.data('consumption') || 0;
           }
         });
+        totalConsumption += linksConsumption;
+        console.log(`1. Consommation Liens: ${linksConsumption.toFixed(0)}W`);
         
-        // b) Si l'option est activée, AJOUTER la consommation des antennes actives
+        // b) Consommation des antennes actives
+        let antennasConsumption = 0;
         if (gameState.antennaSettings.consumptionEnabled) {
           gameState.cy.nodes('[type="antenna"]').forEach(antenna => {
             if (antenna.data('active')) {
-              totalConsumption += antenna.data('consumption') || 0;
+              antennasConsumption += antenna.data('consumption') || 0;
             }
           });
         }
+        totalConsumption += antennasConsumption;
+        console.log(`2. Consommation Antennes: ${antennasConsumption.toFixed(0)}W`);
+
+        // c) Consommation des serveurs actifs (uniquement Cloud)
+        let cloudServersConsumption = 0;
+        if (gameState.cloudNode && gameState.cloudNode.data('servers')) {
+            console.log("Analyse des serveurs sur gameState.cloudNode...");
+            gameState.cloudNode.data('servers').forEach(server => {
+                if(server.isOn) {
+                    const consumption = server.consumption || 0;
+                    cloudServersConsumption += consumption;
+                    console.log(` -> Serveur Cloud '${server.name}' est ON. Ajout de ${consumption}W.`);
+                } else {
+                    console.log(` -> Serveur Cloud '${server.name}' est OFF.`);
+                }
+            });
+        } else {
+            console.log("Aucun serveur Cloud trouvé sur gameState.cloudNode.");
+        }
+        totalConsumption += cloudServersConsumption;
+        console.log(`3. Consommation Serveurs Cloud: ${cloudServersConsumption.toFixed(0)}W`);
       }
       
-      console.log(`[getCurrentConsumption] Total calculé : ${totalConsumption}`);
+      console.log(`TOTAL FINAL: ${totalConsumption.toFixed(0)}W`);
+      console.groupEnd();
       return totalConsumption;
     },
     
